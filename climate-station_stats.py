@@ -10,7 +10,6 @@
 
 # %%
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 import seaborn as sns
@@ -18,23 +17,36 @@ sns.set(rc={'figure.figsize':(11, 4)})
 
 import os
 
-# %% 
-# Read in the file in as df and clean the data
-key_id = 26057
-filename = str(key_id) + '_daily-record.txt'
-filepath = os.path.join('metadata/' + str(key_id), filename)
+# %%
+# Read the files into a df and clean the data
+# Create list of filenames
+key = [26013, 26057, 26164]
+filename_list = []
 
-# Correct space-delimited columns from .txt files
-data = pd.read_fwf(filename, skiprows=19, skipfooter=1,
+for k in range(len(key)):
+       filename = str(key[k]) + '_daily-record.txt'
+       filename_list.append(filename)
+
+# Create a list of dfs
+df_list = [pd.read_fwf(filename, skiprows=19, skipfooter=1,
                    names=['date',
                           'precip',
                           'evap',
                           'tmax',
                           'tmin'])
+       for filename in filename_list]
+
+# Add climate station key for each df
+for k in range(len(key)):
+       df_list[k]['key'] = key[k]
+
+# Concatenate dfs
+data = pd.concat(df_list)
 
 # Swap strings to None type
 data = data.replace({'Nulo': None}, regex=True)
-data = data.replace({'ul' : None}, regex=True)
+data = data.replace({'ul' : None}, regex=True) # Necessary, but could not find anything using 
+                                               # data.loc[data['evap'] == 'ul']
 
 # Set dates to correct format
 data['date'] = pd.to_datetime(data['date'],
