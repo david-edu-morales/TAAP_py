@@ -57,8 +57,9 @@ data['date'] = pd.to_datetime(data['date'],
 # Set df index to the datetime
 data = data.set_index('date')
 
-# Assign float type to data
+# Assign float type to data and int type to key
 data = data.astype(float)
+data['key'] = data['key'].astype(int)
 
 # Add month and year columns to df
 data['year'] = data.index.year
@@ -68,9 +69,17 @@ data['month'] = data. index.month
 # Make a plot of the data
 degree_sign = u'\N{DEGREE SIGN}'
 
-ax = data.loc['2008']['tmin'].plot(linewidth=0.5)
+ax = data[data['key'] == 26057].loc['2008']['tmin'].plot(linewidth=0.5)
 ax.set_ylabel('Temperature [' + degree_sign + 'C]')
 ax.set_xlabel('Date')
+
+# %%
+degree_sign = u'\N{DEGREE SIGN}'
+
+for k in range(len(key)):
+       ax = data[data['key'] == key[k]].loc['1980':'2000']['tmin'].plot(linewidth=0.5)
+       ax.set_ylabel('Temperature [' + degree_sign + 'C]')
+       ax.set_xlabel('Date')
 
 # %%
 # Tutorial from dataquest.io 'timeseries analysis with pandas dataframes'
