@@ -10,6 +10,7 @@
 
 # %%
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 import seaborn as sns
@@ -52,14 +53,36 @@ data['year'] = data.index.year
 data['month'] = data. index.month
 
 # %%
-# Add
-
-# %%
 # Make a plot of the data
 degree_sign = u'\N{DEGREE SIGN}'
 
-ax=data['tmax'].plot(linewidth=0.5)
+ax = data.loc['2008']['tmin'].plot(linewidth=0.5)
 ax.set_ylabel('Temperature [' + degree_sign + 'C]')
 ax.set_xlabel('Date')
 
+# %%
+# Tutorial from dataquest.io 'timeseries analysis with pandas dataframes'
+cols_plot = ['precip', 'tmin', 'tmax']
+axes = data.loc['1996':'2015'][cols_plot].plot(marker='.',
+                                               alpha=0.5,
+                                               linestyle='None',
+                                               figsize=(11, 9),
+                                               subplots=True)
+for ax in axes:
+    ax.set_ylabel('Daily Totals (GWh)')
+
+# %%
+y_label = ['Precipitation [mm]', 'Temperature [' + degree_sign + 'C]', 'Temperature [' + degree_sign + 'C]']
+
+fig, axes = plt.subplots(3, 1, figsize=(11, 10), sharex=True)
+for name, ax, i in zip(['precip', 'tmin', 'tmax'], axes, range(3)):
+       sns.boxplot(data=data.loc['1996':'2015'], x='month', y=name, ax=ax)
+       ax.set_title(name)
+       axes[i].set(ylabel=y_label[i])
+# Remove the automatic x-axis label from all but the bottom subplot 
+       if ax != axes[-1]:
+              ax.set_xlabel('')
+
+# %%
+data.loc['2012', 'tmin'].plot()
 # %%
