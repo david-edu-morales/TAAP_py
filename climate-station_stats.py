@@ -66,16 +66,26 @@ data['year'] = data.index.year
 data['month'] = data. index.month
 
 # %%
+# ***PRACTICE***
+# Resample data
+cols = ['precip', 'evap', 'tmax', 'tmin']
+
+df_26013 = data[data.key == 26013]
+df_26057 = data[data.key == 26057]
+df_26164 = data[data.key == 26164]
+
+tmax_monthly = data[cols].resample('M').mean()
+
+# %%
 # Make a plot of the data
+# Creates a plot for just one station for the given indices
 degree_sign = u'\N{DEGREE SIGN}'
 
 ax = data[data['key'] == 26057].loc['2008']['tmin'].plot(linewidth=0.5)
 ax.set_ylabel('Temperature [' + degree_sign + 'C]')
 ax.set_xlabel('Date')
 
-# %%
-degree_sign = u'\N{DEGREE SIGN}'
-
+# Creates a plot for all stations for the given timeframe and label
 for k in range(len(key)):
        ax = data[data['key'] == key[k]].loc['1980':'2000']['tmin'].plot(linewidth=0.5)
        ax.set_ylabel('Temperature [' + degree_sign + 'C]')
