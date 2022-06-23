@@ -12,6 +12,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
+import seaborn as sns
+sns.set(rc={'figure.figsize':(11, 4)})
+
 import os
 
 # %% 
@@ -22,24 +25,34 @@ filepath = os.path.join('metadata/' + str(key_id), filename)
 
 # Correct space-delimited columns from .txt files
 data = pd.read_fwf(filename, skiprows=19, skipfooter=1,
-                       names=['date',
-                              'precip',
-                              'evap',
-                              'tmax',
-                              'tmin'])
+                   names=['date',
+                          'precip',
+                          'evap',
+                          'tmax',
+                          'tmin'])
 
-# Swap 'Nulo' value to None type
+# Swap strings to None type
 data = data.replace({'Nulo': None}, regex=True)
 data = data.replace({'ul' : None}, regex=True)
 
 # Set dates to correct format
-data['date'] = pd.to_datetime(data['date'], infer_datetime_format=True, format='%Y-%m-%d')
+data['date'] = pd.to_datetime(data['date'],
+                              infer_datetime_format=True,
+                              dayfirst=True,
+                              format='%Y-%m-%d')
 
 # Set df index to the datetime
 data = data.set_index('date')
 
 # Assign float type to data
 data = data.astype(float)
+
+# Add month and year columns to df
+data['year'] = data.index.year
+data['month'] = data. index.month
+
+# %%
+# Add
 
 # %%
 # Make a plot of the data
