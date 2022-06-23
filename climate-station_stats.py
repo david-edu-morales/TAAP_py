@@ -72,6 +72,7 @@ for ax in axes:
     ax.set_ylabel('Daily Totals (GWh)')
 
 # %%
+# Construct subplot figure to compare precip, tmin, and tmax along the same x-axis
 y_label = ['Precipitation [mm]', 'Temperature [' + degree_sign + 'C]', 'Temperature [' + degree_sign + 'C]']
 
 fig, axes = plt.subplots(3, 1, figsize=(11, 10), sharex=True)
@@ -83,6 +84,45 @@ for name, ax, i in zip(['precip', 'tmin', 'tmax'], axes, range(3)):
        if ax != axes[-1]:
               ax.set_xlabel('')
 
+fig.suptitle("Climate Station " + str(key_id), fontsize=25)
+
 # %%
 data.loc['2012', 'tmin'].plot()
+
+# %%
+# Resample data into 7-day (weekly) means
+data_cols = ['precip', 'evap', 'tmin', 'tmax']
+
+data_wkly_mean = data[data_cols].resample('W').mean()
+data_wkly_mean.head()
+data_wkly_mean.loc['2012', 'tmin'].plot()
+
+# %%
+# Constructing combination plot with daily and weekly resampled data
+# Tutorial from dataquest.io 'timeseries analysis with pandas dataframes'
+start, end = '2000-01', '2012-12'
+
+fig, ax = plt.subplots()
+ax.plot(data.loc[start:end, 'tmin'],
+        marker='.',
+        linestyle='-',
+        linewidth=0.5,
+        label='Daily')
+ax.plot(data_wkly_mean.loc[start:end, 'tmin'],
+        marker='o',
+        markersize=5,
+        linestyle='-',
+        label='Weekly Mean Resample')
+ax.set_ylabel('Temperature [' + degree_sign + 'C]')
+ax.legend()
+
+# %%
+# Find monthly sums of precip data
+precip_monthly = data[['precip']].resample('M').sum(min_count=28)
+precip_monthly.head(3)
+
+fig, ax = plt.subplots()
+ax.plot(precip_monthly.loc[start:end, 'precip'], color='black', label='precipitation')
+ax.legend()
+ax.set_ylabel('Precipitation [mm]')
 # %%
