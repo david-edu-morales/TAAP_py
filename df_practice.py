@@ -1,5 +1,5 @@
 # %%
-from calendar import month
+from dfmgmt import *
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -57,7 +57,7 @@ data['year'] = data.index.year
 data['month'] = data.index.month
 
 # %%
-# Create a function to 
+# Create a function to generate separate dfs based on key id
 def split_key_df(df, key):
     """Creates a separate dataframe from a master list based on key id.
     
@@ -65,8 +65,7 @@ def split_key_df(df, key):
     dfs based on the key id. This function is best utilized with a dictionary for
     loop outlined below:
 
-    dfs = {key: split_key_df(data, key) for key in key_list}
-
+    
     Parameters
     ----------
     df : df
@@ -78,19 +77,42 @@ def split_key_df(df, key):
     ----------
     df[df['key'] == key]
     """
-    
-    return df[df[str(key)] == key]
 
+    return df[df['key'] == key]
+
+# Create a dictionary of dfs utilizing a for loop and the split_key_df function
 dfs = {key: split_key_df(data, key) for key in key_list}
 
 # %%
-# ***PRACTICE***
-# Resample data
+# Create a function to generate separate dfs based on freq using a provided list of column names
 cols = ['precip', 'evap', 'tmax', 'tmin']
 
 def resample_mean(df, cols, freq):
-    return df[cols].resample(freq).mean()
+    """Resamples data from a df utilizing a preset list of column names.
+    
+    Combining a list of column names, a dataframe, and a frequency code,
+    this function resamples data according to the mean belonging to included 
+    column names at the specified intervals.
 
+    M = monthly; W = weekly; D = daily; Y = yearly
+
+    Parameters
+    ----------
+    df : df
+        dataframe that will have its data resampled
+    cols : list
+        list of column names that will have their data resampled
+    freq : str
+        Frequency code for establishing the interval of resampling
+
+    Returns
+    ---------- 
+    df[cols].resample(str(freq)).mean()
+    """
+
+    return df[cols].resample(str(freq)).mean()
+
+# Create a dictionary of dfs utilizing a for loop and the resample_mean
 dfs_m_resample = {key: resample_mean(dfs[key], cols, 'M') for key in key_list}
 
 # %%
@@ -110,16 +132,19 @@ for year in range(start,end):
 
 
 # %%
+degree_sign = u'\N{DEGREE SIGN}'
+
 fig, ax = plt.subplots()
 ax.plot(data.loc[start:end, 'tmin'],
         marker='.',
         linestyle='-',
         linewidth=0.5,
         label='Daily')
-ax.plot(data_wkly_mean.loc[start:end, 'tmin'],
+ax.plot(dfs_m_resample.loc[start:end, 'tmin'],
         marker='o',
         markersize=5,
         linestyle='-',
         label='Weekly Mean Resample')
 ax.set_ylabel('Temperature [' + degree_sign + 'C]')
 ax.legend()
+# %%
