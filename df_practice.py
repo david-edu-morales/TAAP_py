@@ -57,8 +57,29 @@ data['year'] = data.index.year
 data['month'] = data.index.month
 
 # %%
+# Create a function to 
 def split_key_df(df, key):
-    return df[df['key'] == key]
+    """Creates a separate dataframe from a master list based on key id.
+    
+    A master dataframe that contains a key id column can be separated into subset
+    dfs based on the key id. This function is best utilized with a dictionary for
+    loop outlined below:
+
+    dfs = {key: split_key_df(data, key) for key in key_list}
+
+    Parameters
+    ----------
+    df : df
+        master dataframe from which to pull data
+    key : int
+        Key id for each climate station
+        
+    Returns
+    ----------
+    df[df['key'] == key]
+    """
+    
+    return df[df[str(key)] == key]
 
 dfs = {key: split_key_df(data, key) for key in key_list}
 
