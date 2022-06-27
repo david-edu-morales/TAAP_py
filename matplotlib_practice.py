@@ -92,9 +92,33 @@ ax.set_ylabel(degree_sign + 'C')
 ax.set_title('Monthy Mean of Max Temperature\nClimate Station: 26057')
 
 # %%
-fig, axes = plt.subplots(nrows=3, ncols=4)
+fig, axes = plt.subplots(nrows=3, ncols=4, figsize=(11, 10), sharex=True)
 for m, ax in zip(range(12), axes):
     x = dfs_m_mean[26057][dfs_m_mean[26057].index.month == m+1].index.year
     y = dfs_m_mean[26057][dfs_m_mean[26057].index.month == m+1]['tmax']
-    axes.plot(x,y, ax=ax)
+    axes.plot(x,y)
+
+#%%
+month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+fig = plt.figure(figsize=(30,20))
+fig.subplots_adjust(hspace=0.2, wspace=0.2)
+for i in range(1,13):
+       ax = fig.add_subplot(3,4,i)
+       x = dfs_m_mean[26057][dfs_m_mean[26057].index.month == i].index.year
+       y = dfs_m_mean[26057][dfs_m_mean[26057].index.month == i]['tmax']
+       ax.plot(x,y)
+       ax.set_ylabel(degree_sign+'C')
+       ax.set_title(month_str[i-1], fontsize=15, fontweight='bold')
+
 # %%
+# Construct subplot figure to compare precip, tmin, and tmax along the same x-axis
+y_label = ['Precipitation [mm]', 'Temperature [' + degree_sign + 'C]', 'Temperature [' + degree_sign + 'C]']
+
+fig, axes = plt.subplots(3, 1, figsize=(11, 10), sharex=True)
+for name, ax, i in zip(['precip', 'tmin', 'tmax'], axes, range(3)):
+       sns.boxplot(data=data.loc['1996':'2015'], x='month', y=name, ax=ax)
+       ax.set_title(name)
+       axes[i].set(ylabel=y_label[i])
+# Remove the automatic x-axis label from all but the bottom subplot 
+       if ax != axes[-1]:
+              ax.set_xlabel('')
