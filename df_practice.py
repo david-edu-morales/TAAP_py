@@ -82,11 +82,6 @@ for year in range(start,end):
     dfs_m_resample[26057].loc[str(year)].plot(ax=axes, label=str(year), x='month', y='tmax')
 
 # %%
-# Plots the monthly mean for each month in a respective plot across a given timeframe
-dfs[26057]
-dfs_m_resample[26057]
-
-# %%
 fig, axes = plt.subplots(3, 4, figsize=(4,5))
 for m in range(12):
     sns.line
