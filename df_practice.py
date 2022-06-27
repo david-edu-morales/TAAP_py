@@ -74,28 +74,40 @@ dfs_m_resample[26057].loc['2012']['tmax'].plot()
 dfs_m_resample[26057]['month'] = dfs_m_resample[26057].index.month  
 
 # %%
+# Creates a plot that displays tmax for across all 12 months for each year for a given timeframe 
 start, end = 2000, 2016
 
 fig, axes = plt.subplots()
 for year in range(start,end):
     dfs_m_resample[26057].loc[str(year)].plot(ax=axes, label=str(year), x='month', y='tmax')
 
-
+# %%
+# Plots the monthly mean for each month in a respective plot across a given timeframe
+dfs[26057]
+dfs_m_resample[26057]
 
 # %%
-degree_sign = u'\N{DEGREE SIGN}'
+fig, axes = plt.subplots(3, 4, figsize=(4,5))
+for m in range(12):
+    sns.line
 
-fig, ax = plt.subplots()
-ax.plot(data.loc[start:end, 'tmin'],
-        marker='.',
-        linestyle='-',
-        linewidth=0.5,
-        label='Daily')
-ax.plot(dfs_m_resample.loc[start:end, 'tmin'],
-        marker='o',
-        markersize=5,
-        linestyle='-',
-        label='Weekly Mean Resample')
-ax.set_ylabel('Temperature [' + degree_sign + 'C]')
-ax.legend()
+# %%
+# Plots 12 subplots, each showing the distribution of recorded monthly tmax for each month 
+sns.relplot(data=dfs_m_resample[26057],
+            x=dfs_m_resample[26057].index.year,
+            y="tmax",
+            col=dfs_m_resample[26057].index.month,
+            col_wrap=4,
+            kind='line')
+
+# %%
+sns.lineplot(x=dfs_m_resample[26057][dfs_m_resample[26057].index.month == 12],
+             y=dfs_m_resample[26057]['tmax'])
+# %%
+fig, axes = plt.subplots(3, 4, figsize=(4,5))
+for m in range(12):
+    sns.lineplot(data=dfs_m_resample[26057],
+                 x=dfs_m_resample[26057].index.year | None = None,
+                 y="tmax"
+                 )
 # %%

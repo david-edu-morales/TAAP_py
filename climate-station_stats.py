@@ -115,7 +115,7 @@ for name, ax, i in zip(['precip', 'tmin', 'tmax'], axes, range(3)):
        if ax != axes[-1]:
               ax.set_xlabel('')
 
-fig.suptitle("Climate Station " + str(key_id), fontsize=25)
+fig.suptitle("Climate Station " + str(key), fontsize=25)
 
 # %%
 data.loc['2012', 'tmin'].plot()
