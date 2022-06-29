@@ -89,19 +89,30 @@ ax.set_ylabel(degree_sign + 'C')
 ax.set_title('Monthy Mean of Max Temperature\nClimate Station: 26057')
 
 # %%
+# Create 12-plot monthly mean for climate stations
+# String for month list
 month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+start, end = 1976, 2016
+
+df_mm_lastforty = dfs_m_mean[26057].loc[str(start):str(end)]
+
 fig = plt.figure(figsize=(30,20))
 fig.subplots_adjust(hspace=0.2, wspace=0.2)
+fig.suptitle("Monthly Mean for Tmax\nClimate Station 26057", fontsize=40)
+
 for i in range(1,13):
        ax = fig.add_subplot(3,4,i)
-       x = dfs_m_mean[26057][dfs_m_mean[26057].index.month == i].index.year
-       y = dfs_m_mean[26057][dfs_m_mean[26057].index.month == i]['tmax']
+       x = df_mm_lastforty[df_mm_lastforty.index.month == i].index.year
+       y = df_mm_lastforty[df_mm_lastforty.index.month == i]['tmax']
+
        ax.plot(x,y)
+
+       # Plot formatting
        ax.set_ylabel(degree_sign+'C')
-       ax.set_title(month_str[i-1], fontsize=15, fontweight='bold')
+       ax.set_title(month_str[i-1], fontsize=20, fontweight='bold')
 
        # Make the linear regression
-       database= dfs_m_mean[26057].loc[dfs_m_mean[26057]['month']==i][['tmax','year']]
+       database= df_mm_lastforty.loc[df_mm_lastforty['month']==i][['tmax','year']]
        database=database.dropna()
 
        x_data = database['year'].values.reshape(database.shape[0],1)
@@ -114,3 +125,49 @@ for i in range(1,13):
        y_estimate = coef*x_data+inter
 
        ax.plot(x_data,y_estimate)
+       ax.text(.1, .8, str(round((end-start)*coef[0,0],2))+degree_sign+'C/40yr',
+               transform=ax.transAxes,
+               fontsize=30,
+               color='red')
+
+# %%
+# Plot for tmin
+degree_sign = u'\N{DEGREE SIGN}'
+# Set database to last forty years
+start, end = 1976, 2016
+df_mm_lastforty = dfs_m_mean[26057].loc[str(start):str(end)]
+
+fig = plt.figure(figsize=(30,20))
+fig.subplots_adjust(hspace=0.2, wspace=0.2)
+fig.suptitle("Monthly Mean for Tmin\nClimate Station 26057", fontsize=40)
+
+for i in range(1,13):
+       ax = fig.add_subplot(3,4,i)
+       x = df_mm_lastforty[df_mm_lastforty.index.month == i].index.year
+       y = df_mm_lastforty[df_mm_lastforty.index.month == i]['tmin']
+
+       ax.plot(x,y)
+
+       # Plot formatting
+       ax.set_ylabel(degree_sign+'C')
+       ax.set_title(month_str[i-1], fontsize=30, fontweight='bold')
+
+       # Make the linear regression
+       database= df_mm_lastforty.loc[df_mm_lastforty['month']==i][['tmin','year']]
+       database=database.dropna()
+
+       x_data = database['year'].values.reshape(database.shape[0],1)
+       y_data = database['tmin'].values.reshape(database.shape[0],1)
+
+       reg = linear_model.LinearRegression().fit(x_data, y_data)
+       coef = reg.coef_
+       inter= reg.intercept_
+       
+       y_estimate = coef*x_data+inter
+
+       ax.plot(x_data,y_estimate)
+       ax.text(.1, .8, str(round((end-start)*coef[0,0],2))+degree_sign+'C/40yr',
+               transform=ax.transAxes,
+               fontsize=30,
+               color='red')
+# %%
