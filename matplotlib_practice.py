@@ -234,10 +234,9 @@ for col in cols:
               x = df_mm_lastforty[df_mm_lastforty.index.month == i].index.year
               y = df_mm_lastforty[df_mm_lastforty.index.month == i][col]
 
-              ax.plot(x,y)
+              ax.plot(x,y) # this plots the col values
 
-              # Plot formatting
-              ax.set_ylabel(degree_sign+'C')
+              # Col-alike subplot formatting              
               ax.set_title(month_str[i-1], fontsize=20, fontweight='bold')
 
               # Make the linear regression
@@ -250,15 +249,33 @@ for col in cols:
               reg = linear_model.LinearRegression().fit(x_data, y_data)
               coef = reg.coef_
               inter= reg.intercept_
-              
-              y_estimate = coef*x_data+inter
+              y_estimate = coef*x_data+inter # y=mx+b, possible option to upgrade
 
-              ax.plot(x_data,y_estimate)
-              ax.text(.1, .8, str(round((end-start)*coef[0,0],2))+'mm/40yr',
-                     transform=ax.transAxes,
-                     fontsize=24,
-                     color='red')
+              ax.plot(x_data,y_estimate) # this plots the linear regression
 
-       plt.savefig('26057_'+col+'-mm_test')
+              # Col-dependent subplot formatting
+              if col == cols[0]:
+                     ax.set_ylabel('mm')
+                     ax.text(.1, .8,
+                             str(round((end-start)*coef[0,0],2))+'mm/40yr',
+                             transform=ax.transAxes,
+                             fontsize=24,
+                             color='red')
+              elif col == cols[1]: # cannot figure out how to combine cols[0:2]
+                     ax.set_ylabel('mm')
+                     ax.text(.1, .8,
+                             str(round((end-start)*coef[0,0],2))+'mm/40yr',
+                             transform=ax.transAxes,
+                             fontsize=24,
+                             color='red')
+              else:
+                     ax.set_ylabel(degree_sign+'C')
+                     ax.text(.1, .8,
+                             str(round((end-start)*coef[0,0],2))+degree_sign+'C/40yr',
+                             transform=ax.transAxes,
+                             fontsize=24,
+                             color='red')
+
+       plt.savefig('26057_'+col+'-mm')
 
 # %%
