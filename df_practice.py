@@ -68,41 +68,4 @@ dfs_m_resample = {key: resample_mean(dfs[key], cols, 'M') for key in key_list}
 
 # %%
 # Practice graph-splicing syntax
-dfs_m_resample[26057].loc['2012']['tmax'].plot()
-
-# %%
-dfs_m_resample[26057]['month'] = dfs_m_resample[26057].index.month  
-
-# %%
-# Creates a plot that displays tmax for across all 12 months for each year for a given timeframe 
-start, end = 2000, 2016
-
-fig, axes = plt.subplots()
-for year in range(start,end):
-    dfs_m_resample[26057].loc[str(year)].plot(ax=axes, label=str(year), x='month', y='tmax')
-
-# %%
-fig, axes = plt.subplots(3, 4, figsize=(4,5))
-for m in range(12):
-    sns.line
-
-# %%
-# Plots 12 subplots, each showing the distribution of recorded monthly tmax for each month 
-sns.relplot(data=dfs_m_resample[26057],
-            x=dfs_m_resample[26057].index.year,
-            y="tmax",
-            col=dfs_m_resample[26057].index.month,
-            col_wrap=4,
-            kind='line')
-
-# %%
-sns.lineplot(x=dfs_m_resample[26057][dfs_m_resample[26057].index.month == 12],
-             y=dfs_m_resample[26057]['tmax'])
-# %%
-fig, axes = plt.subplots(3, 4, figsize=(4,5))
-for m in range(12):
-    sns.lineplot(data=dfs_m_resample[26057],
-                 x=dfs_m_resample[26057].index.year | None = None,
-                 y="tmax"
-                 )
-# %%
+dfs_m_resample[26057].loc['2012']['tmax'].plot() 
