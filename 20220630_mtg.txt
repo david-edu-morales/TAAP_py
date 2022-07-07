@@ -1,0 +1,27 @@
+multiply mean by # of days for "cumulative" monthly values
+
+more than 10 of missing days can be considered incomplete data for a month (15 days, half of the days)
+
+look for anomalies, missing value analysis. 
+
+develop lin reg to estimate the value from the other gauges, using the one that is closest and where the correlation is the highest
+
+Scattergram to plot relative data to determine correlation coefficient. Is there are clear difference? 
+- Different reg for winter/summer storms, and temperature data
+
+Look at temperatures for same timeframe of evap data 76-88
+- how do they measure evap?
+- plot temp on the same graph to see if a signal in temp appears as well
+
+HOW TO DETERMINE IF TRENDS ARE SIGNIFICANT
+Take entire record into 20-30 yr intervals
+- t-test, assumptions about the samples, mean and variance are sig diff. (assumes sample is normally dist.)
+- ks-test, non-parametric test to see dist. between median. No assumption of distro 
+- null hyp - same distro, if less than 0.05 then null is rejected
+- monte-carlo: 70 yr of data w/ linreg
+
+uniform vs normal distro: sample from here
+
+outline how this report is going to look and begin filling it in as I conduct the research 
+
+Continue looking for groundwater data in USPSS, REACH OUT TO ELIA AND SEE WHAT IS AVAILABLE
