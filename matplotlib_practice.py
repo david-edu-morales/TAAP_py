@@ -135,3 +135,34 @@ for col in cols_mx:
                              color='red')
 
        plt.savefig('26057_'+col+'-mm')
+
+# %%
+# Multiply mean by # of days for "cumulative" monthly values
+# Remember to consider leap year, perhaps create two lists 
+# 1) "normal" day distro and 2) leap-yr distro. Every four years calls list 2
+# Leap-years: 2020, 2016, 2012, 2008, ...
+
+day_list = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] # "normal" year distro
+ly_list = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] # leap-year distro
+
+for i in range(12):
+       dfs_mm_mx[26057]['precip_cum'] = dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == i+1][['precip']] * day_list[i]
+       
+# %%
+for i in range(2):
+       dfs_mm_mx[26057]['precip_cum'] = dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == i+1][['precip']].multiply(day_list[i])
+
+# %%
+test = pd.DataFrame({
+              "A" : [1,2,3,4,5],
+              "B" : [2,4,6,8,10]
+       })
+# %%
+dict_cmm_mx = {month: dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == month+1][['precip']] * day_list[month] for month in range(12)}
+df_cmm_26057 = pd.concat(dict_cmm_mx.values(), axis=0)
+df_cmm_26057 = df_cmm_26057.sort_index()
+df_cmm_26057.rename(columns={'precip':'precip_cum'})
+# Create a dictionary of dfs utilizing a for loop and the resample_mean
+# dfs_mm_mx = {key: resample_mean(dfs_mx[key], cols_mx, 'M') for key in key_list_mx}
+
+# %%
