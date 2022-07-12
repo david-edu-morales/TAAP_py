@@ -1,5 +1,7 @@
 # %%
 import random
+import matplotlib
+import matplotlib.pyplot as plt
 
 # %%
 def rollDice():
@@ -21,25 +23,38 @@ def simple_bettor(funds, initial_wager,wager_count):
     value = funds
     wager = initial_wager
 
-    currentWager = 0
+    wX = []
+    vY = []
 
-    while currentWager < wager_count:
+    currentWager = 1
+
+    while currentWager <= wager_count:
         if rollDice():
             value += wager
+            wX.append(currentWager)
+            vY.append(value)
         else:
             value -= wager
-        
+            wX.append(currentWager)
+            vY.append(value)
+
         currentWager += 1
 
     if value < 0:
         value = 'broke'
-    print('Funds:', value)
+    #print('Funds:', value)
+
+    plt.plot(wX, vY)
 
 x = 0
 
-while x < 100:
-    simple_bettor(10000, 100, 10000)
+while x < 1000:
+    simple_bettor(10000, 100, 100000)
     x += 1
+
+plt.ylabel('Account Value')
+plt.xlabel('Wager Count')
+plt.show()
 
 # %%
 x = 0
