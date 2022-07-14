@@ -3,6 +3,8 @@ import random
 import matplotlib
 import matplotlib.pyplot as plt
 import time
+
+from urllib3 import Retry
 from multi_bettor import *
 
 # %%
@@ -10,10 +12,11 @@ lower_bust = 31.235     # after running 1e6 times, this was the doubler bust rat
 higher_profit = 63.208  # after running 1e6 times, this was the doubler profit rate
 
 sampleSize = 1000
-startingFunds = 10000
-wagerSize = 10
-wagerCount = 10000
+startingFunds = 100000
+wagerSize = 100
+wagerCount = 1000
 
+'''
 def rollDice():
     roll = random.randint(1, 100)
 
@@ -28,14 +31,22 @@ def rollDice():
     elif 100 > roll > 50:
         #print(roll, 'roll was 51-99, you win! Play more!')
         return True
+'''
+
+def rollDice():
+    roll = random.randint(1, 100)
+
+    if roll <= 50:      # losing roll
+        return False
+
+    elif roll >= 50:     # winning roll
+        return True
 
 def dAlembert(funds, initial_wager, wager_count):
     
+    global Ret
     global da_busts
     global da_profits
-
-    da_profits = 0.0
-    da_busts = 0.0
 
     value = funds
     wager = initial_wager
@@ -92,9 +103,7 @@ def dAlembert(funds, initial_wager, wager_count):
     if value > funds:
         da_profits+=1
 
-    print(value)
-
-dAlembert(startingFunds, wagerSize, wagerCount)
+    Ret += value
 
 def multiple_bettor(funds, initial_wager, wager_count):
     global multiple_busts
@@ -275,46 +284,21 @@ def simple_bettor(funds, initial_wager,wager_count, color):
 
 x = 0
 
-# while True:                 # 'while True' will cause this loop to run on infinitely
-#     multiple_busts = 0.0
-#     multiple_profits = 0.0
+Ret = 0.0
+da_profits = 0.0
+da_busts = 0.0
+daSampSize = 10000
 
-#     multipleSampleSize = 100000
-#     currentSample = 1
+counter = 1
 
-#     random_multiple = random.uniform(1.5,2.0)
+while counter <= daSampSize:
+    dAlembert(startingFunds, wagerSize, wagerCount)
+    counter +=1 
 
-#     while currentSample <= multipleSampleSize:
-#         multiple_bettor(startingFunds, wagerSize, wagerCount)
-#         currentSample += 1
-
-#     if ((multiple_busts/multipleSampleSize)*100.00 < lower_bust) and ((multiple_profits/multipleSampleSize)*100.00 > higher_profit):
-#         print('#########################')
-#         print('Found a winner, the multiple was:', random_multiple)
-#         print('Lower bust to beat:', lower_bust)
-#         print('Higher profit rate to beat:', higher_profit)
-#         print('bust rate:', (multiple_busts/multipleSampleSize)*100.00)
-#         print('profit rate:', (multiple_profits/multipleSampleSize)*100.00)
-#         print('#########################')
-
-#     else:
-#         pass
-#         '''print('#########################')
-#         print('Found a loser, the multiple was:', random_multiple)
-#         print('Lower bust to beat:', lower_bust)
-#         print('Higher profit rate to beat:', higher_profit)
-#         print('bust rate:', (multiple_busts/multipleSampleSize)*100.00)
-#         print('profit rate:', (multiple_profits/multipleSampleSize)*100.00)
-#         print('#########################')'''
-
-
-
-# %%
-x = 0
-
-while x < 100:
-    result = rollDice()
-    print(result)
-    x+=1
+print('Total invested', daSampSize*startingFunds)
+print('Total return:', Ret)
+print('ROI', Ret - (daSampSize*startingFunds))
+print('Bust rate:', (da_busts/daSampSize)*100.00)
+print('Profit rate:', (da_profits/daSampSize)*100.00)
 
 # %%
