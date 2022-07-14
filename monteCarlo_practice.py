@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 import time
 
 # %%
+sampleSize = 1000
+startingFunds = 10000
+wagerSize = 100
+wagerCount = 1000
+
 def rollDice():
     roll = random.randint(1, 100)
 
@@ -20,7 +25,7 @@ def rollDice():
         #print(roll, 'roll was 51-99, you win! Play more!')
         return True
 
-def doubler_bettor(funds, initial_wager,wager_count):
+def doubler_bettor(funds, initial_wager,wager_count, color):
     value = funds
     wager = initial_wager
     global broke_count
@@ -46,14 +51,18 @@ def doubler_bettor(funds, initial_wager,wager_count):
                 previousWagerAmount = wager
                 wX.append(currentWager)
                 vY.append(value)
-                if value < 0:
+                if value <= 0:
                     #print('we went broke after', currentWager,'bets')
                     broke_count+=1
                     break
+
         elif previousWager == 'loss':
             #print('we lost the last one, so we will be smart and double')
             if rollDice():
                 wager = previousWagerAmount * 2
+
+                if (value - wager < 0):
+                    wager = value
                 #print('we won', wager)
                 value+=wager
                 #print(value)
@@ -63,24 +72,28 @@ def doubler_bettor(funds, initial_wager,wager_count):
                 vY.append(value)
             else:
                 wager = previousWagerAmount * 2
+
+                if (value - wager < 0):
+                    wager = value
                 #print('we lost', wager)
                 value -= wager
-                if value < 0:
+                previousWagerAmount = wager
+                wX.append(currentWager)
+                vY.append(value)
+                if value <= 0:
                     #print('we went broke after', currentWager, 'bets')
                     broke_count+=1
                     break
                 #print(value)
                 previousWager = 'loss'
 
-                previousWagerAmount = wager
-                wX.append(currentWager)
-                vY.append(value)
+                
         currentWager += 1
 
     #print(value)
-    plt.plot(wX,vY)
+    plt.plot(wX,vY,'c')
 
-xx = 0
+'''xx = 0
 broke_count = 0
 
 while xx < 100:
@@ -92,12 +105,12 @@ print('survival rate:', 100-((broke_count/float(xx))*100))
 
 plt.axhline(0, color = 'r')
 
-plt.show()
+plt.show()'''
 
-time.sleep(45)
+#time.sleep(45)
 
-# %%
-def simple_bettor(funds, initial_wager,wager_count):
+def simple_bettor(funds, initial_wager,wager_count, color):
+    global broke_count
     value = funds
     wager = initial_wager
 
@@ -118,17 +131,23 @@ def simple_bettor(funds, initial_wager,wager_count):
 
         currentWager += 1
 
-    if value < 0:
+    if value <= 0:
         value = 'broke'
+        broke_count+=1
     #print('Funds:', value)
 
-    plt.plot(wX, vY)
+    plt.plot(wX, vY, color)
 
 x = 0
+broke_count = 0
 
-while x < 100:
-    simple_bettor(10000, 100, 10000)
+while x < sampleSize:
+    #simple_bettor(startingFunds, wagerSize, wagerCount, 'k')
+    doubler_bettor(startingFunds, wagerSize, wagerCount, 'c')
     x += 1
+
+#print('death rate:', (broke_count/float(x)) * 100)
+#print('survival rate:', 100-((broke_count/float(x))*100))
 
 plt.ylabel('Account Value')
 plt.xlabel('Wager Count')
