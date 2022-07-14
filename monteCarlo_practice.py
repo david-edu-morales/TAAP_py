@@ -8,14 +8,6 @@ from urllib3 import Retry
 from multi_bettor import *
 
 # %%
-lower_bust = 31.235     # after running 1e6 times, this was the doubler bust rate
-higher_profit = 63.208  # after running 1e6 times, this was the doubler profit rate
-
-sampleSize = 1000
-startingFunds = 100000
-wagerSize = 100
-wagerCount = 1000
-
 '''
 def rollDice():
     roll = random.randint(1, 100)
@@ -284,21 +276,46 @@ def simple_bettor(funds, initial_wager,wager_count, color):
 
 x = 0
 
-Ret = 0.0
-da_profits = 0.0
-da_busts = 0.0
-daSampSize = 10000
+lower_bust = 31.235     # after running 1e6 times, this was the doubler bust rate
+higher_profit = 63.208  # after running 1e6 times, this was the doubler profit rate
 
-counter = 1
+sampleSize = 1000
+startingFunds = 10000
 
-while counter <= daSampSize:
-    dAlembert(startingFunds, wagerSize, wagerCount)
-    counter +=1 
 
-print('Total invested', daSampSize*startingFunds)
-print('Total return:', Ret)
-print('ROI', Ret - (daSampSize*startingFunds))
-print('Bust rate:', (da_busts/daSampSize)*100.00)
-print('Profit rate:', (da_profits/daSampSize)*100.00)
+while True:
+    #wagerSize = 100
+    #wagerCount = 1000
+    wagerSize = random.uniform(1.0, 1000.00)
+    wagerCount = random.uniform(10.0, 10000)
+
+    Ret = 0.0
+    da_profits = 0.0
+    da_busts = 0.0
+    daSampSize = 10000
+
+    counter = 1
+
+    while counter <= daSampSize:
+        dAlembert(startingFunds, wagerSize, wagerCount)
+        counter +=1 
+
+    ROI = Ret - (daSampSize*startingFunds)
+    totalInvested = daSampSize*startingFunds
+    percentROI = (ROI/totalInvested)*100.00
+
+    wagerSizePercent = (wagerSize/startingFunds)*100.0
+
+    if percentROI > 1:
+        print('________________________________________')
+        print('Total invested', daSampSize*startingFunds)
+        print('Total return:', Ret)
+        print('ROI', Ret - (daSampSize*startingFunds))
+        print('Percent ROI:', percentROI)
+        print('Bust rate:', (da_busts/daSampSize)*100.00)
+        print('Profit rate:', (da_profits/daSampSize)*100.00)
+        print('Wager size:', wagerSize)
+        print('Wager count:', wagerCount)
+        print('wager size percentage:', wagerSizePercent)
 
 # %%
