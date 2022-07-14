@@ -318,4 +318,30 @@ while True:
         print('Wager count:', wagerCount)
         print('wager size percentage:', wagerSizePercent)
 
+        saveFile = open('monteCarloLiberal.csv', 'a')
+        saveLine = '\n'+str(percentROI)+','+str(wagerSizePercent)+','+str(wagerCount)+',g'
+                    # values must be converted into string because 'int' and 'str' cannot be concatenated together
+                    # 'g' signifies the color, green, which will be used to plot values later on
+        saveFile.write(saveLine)
+        saveFile.close()
+
+    if percentROI < -1:
+        print('________________________________________')
+        print('Total invested', daSampSize*startingFunds)
+        print('Total return:', Ret)
+        print('ROI', Ret - (daSampSize*startingFunds))
+        print('Percent ROI:', percentROI)
+        print('Bust rate:', (da_busts/daSampSize)*100.00)
+        print('Profit rate:', (da_profits/daSampSize)*100.00)
+        print('Wager size:', wagerSize)
+        print('Wager count:', wagerCount)
+        print('wager size percentage:', wagerSizePercent)
+
+        saveFile = open('monteCarloLiberal.csv', 'a')
+        saveLine = '\n'+str(percentROI)+','+str(wagerSizePercent)+','+str(wagerCount)+',r'
+                    # values must be converted into string because 'int' and 'str' cannot be concatenated together
+                    # 'g' signifies the color, red, which will be used to plot values later on
+        saveFile.write(saveLine)
+        saveFile.close()
+        
 # %%
