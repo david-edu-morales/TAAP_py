@@ -28,7 +28,8 @@ def rollDice():
 def doubler_bettor(funds, initial_wager,wager_count, color):
     value = funds
     wager = initial_wager
-    global broke_count
+    global doubler_busts
+    global doubler_profits
     wX = []
     vY = []
 
@@ -53,7 +54,7 @@ def doubler_bettor(funds, initial_wager,wager_count, color):
                 vY.append(value)
                 if value <= 0:
                     #print('we went broke after', currentWager,'bets')
-                    broke_count+=1
+                    doubler_busts+=1
                     break
 
         elif previousWager == 'loss':
@@ -82,7 +83,7 @@ def doubler_bettor(funds, initial_wager,wager_count, color):
                 vY.append(value)
                 if value <= 0:
                     #print('we went broke after', currentWager, 'bets')
-                    broke_count+=1
+                    doubler_busts+=1
                     break
                 #print(value)
                 previousWager = 'loss'
@@ -91,26 +92,15 @@ def doubler_bettor(funds, initial_wager,wager_count, color):
         currentWager += 1
 
     #print(value)
-    plt.plot(wX,vY,'c')
-
-'''xx = 0
-broke_count = 0
-
-while xx < 100:
-    doubler_bettor(10000, 100, 100)
-    xx+=1
-
-print('death rate:', (broke_count/float(xx)) * 100)
-print('survival rate:', 100-((broke_count/float(xx))*100))
-
-plt.axhline(0, color = 'r')
-
-plt.show()'''
+    plt.plot(wX,vY,color)
+    if value > funds:
+        doubler_profits += 1
 
 #time.sleep(45)
 
 def simple_bettor(funds, initial_wager,wager_count, color):
-    global broke_count
+    global simple_busts
+    global simple_profits
     value = funds
     wager = initial_wager
 
@@ -132,23 +122,37 @@ def simple_bettor(funds, initial_wager,wager_count, color):
         currentWager += 1
 
     if value <= 0:
-        value = 'broke'
-        broke_count+=1
+        value = 0
+        simple_busts+=1
     #print('Funds:', value)
 
     plt.plot(wX, vY, color)
+    if value > funds:
+        value = 0
+        simple_profits += 1
 
 x = 0
-broke_count = 0
+
+simple_busts = 0.0
+doubler_busts = 0.0
+simple_profits = 0.0
+doubler_profits = 0.0
 
 while x < sampleSize:
-    #simple_bettor(startingFunds, wagerSize, wagerCount, 'k')
+    simple_bettor(startingFunds, wagerSize, wagerCount, 'k')
     doubler_bettor(startingFunds, wagerSize, wagerCount, 'c')
     x += 1
+
+print('Simple Bettor bust chance:', (simple_busts/sampleSize)*100.0)
+print('Double Bettor bust chance:', (doubler_busts/sampleSize)*100.0)
+
+print('Simple Bettor profit chances:', (simple_profits/sampleSize)*100.0)
+print('Double Bettor profit chances:', (doubler_profits/sampleSize)*100.0)
 
 #print('death rate:', (broke_count/float(x)) * 100)
 #print('survival rate:', 100-((broke_count/float(x))*100))
 
+plt.axhline(0, color='r')
 plt.ylabel('Account Value')
 plt.xlabel('Wager Count')
 plt.show()
