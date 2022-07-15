@@ -254,13 +254,47 @@ for col in cols_us:
        plt.savefig('22140_'+col+'-mm')
 
 # %%
+day_list = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] # "normal" year distro
+ly_list = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] # leap-year distro
+
+for i in range(12):
+       dfs_mm_mx[26057]['precip_cum'] = dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == i+1][['precip']] * day_list[i]
+       
+# %%
+for i in range(2):
+       dfs_mm_mx[26057]['precip_cum'] = dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == i+1][['precip']].multiply(day_list[i])
+
+# %%
+test = pd.DataFrame({
+              "A" : [1,2,3,4,5],
+              "B" : [2,4,6,8,10]
+       })
+# %%
+# Create a dictionary of 
+dict_cmm_mx = {month: dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == month+1][['precip']] * day_list[month] for month in range(12)}
+df_cmm_26057 = pd.concat(dict_cmm_mx.values(), axis=0)
+df_cmm_26057 = df_cmm_26057.sort_index()
+df_cmm_26057 = df_cmm_26057.rename(columns={'precip':'precip_cum'})
+# Create a dictionary of dfs utilizing a for loop and the resample_mean
+# dfs_mm_mx = {key: resample_mean(dfs_mx[key], cols_mx, 'M') for key in key_list_mx}
+
+# %%
+# Brief stat analysis
+for m in range(1,13):
+       print(df_cmm_26057[df_cmm_26057.index.month == m].std())
+
+# %%
 # Monte Carlo simulator to evaluate the significance of observed changes in mensual precip.
 
-randList = []
+janPrecipCum = dict_cmm_mx[0]['precip'].tail(40).values.tolist()      # example of target list for while loop
+dict_cmm_mx[0]['precip'].tail(40).plot()                              # actual plot of target list values
 
+'''    Code for randList to use in monteCarloPrecip
+randList = []
 for i in range(0,40):
        n = random.randint(1,10)
        randList.append(n)
+'''
 
 def monteCarloPrecip(precipCumList):
        tX = [] # list to collect count of years for x-axis
@@ -278,6 +312,8 @@ def monteCarloPrecip(precipCumList):
 
        plt.plot(tX, vY)
 
-monteCarloPrecip(randList)
+monteCarloPrecip(janPrecipCum)
 
 
+
+# %%
