@@ -5,6 +5,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import random
 from sklearn import linear_model
 import seaborn as sns
 sns.set(rc={'figure.figsize':(11, 4)})
@@ -251,3 +252,32 @@ for col in cols_us:
                              color='red')
 
        plt.savefig('22140_'+col+'-mm')
+
+# %%
+# Monte Carlo simulator to evaluate the significance of observed changes in mensual precip.
+
+randList = []
+
+for i in range(0,40):
+       n = random.randint(1,10)
+       randList.append(n)
+
+def monteCarloPrecip(precipCumList):
+       tX = [] # list to collect count of years for x-axis
+       vY = [] # list to collect selected precip values for y-axis
+
+       currentYear = 1      # counter to keep track of years
+
+       while currentYear <= 40:
+              roll = random.randint(0,39)
+              precipCumValue = precipCumList[roll]
+              tX.append(currentYear)
+              vY.append(precipCumValue)
+
+              currentYear += 1
+
+       plt.plot(tX, vY)
+
+monteCarloPrecip(randList)
+
+
