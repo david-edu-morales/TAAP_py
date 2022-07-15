@@ -3,9 +3,8 @@ import random
 import matplotlib
 import matplotlib.pyplot as plt
 import time
-
 from urllib3 import Retry
-from multi_bettor import *
+
 
 # %%
 '''
