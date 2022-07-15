@@ -261,22 +261,11 @@ for i in range(12):
        dfs_mm_mx[26057]['precip_cum'] = dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == i+1][['precip']] * day_list[i]
        
 # %%
-for i in range(2):
-       dfs_mm_mx[26057]['precip_cum'] = dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == i+1][['precip']].multiply(day_list[i])
-
-# %%
-test = pd.DataFrame({
-              "A" : [1,2,3,4,5],
-              "B" : [2,4,6,8,10]
-       })
-# %%
 # Create a dictionary of 
 dict_cmm_mx = {month: dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == month+1][['precip']] * day_list[month] for month in range(12)}
 df_cmm_26057 = pd.concat(dict_cmm_mx.values(), axis=0)
 df_cmm_26057 = df_cmm_26057.sort_index()
 df_cmm_26057 = df_cmm_26057.rename(columns={'precip':'precip_cum'})
-# Create a dictionary of dfs utilizing a for loop and the resample_mean
-# dfs_mm_mx = {key: resample_mean(dfs_mx[key], cols_mx, 'M') for key in key_list_mx}
 
 # %%
 # Brief stat analysis
@@ -313,7 +302,5 @@ def monteCarloPrecip(precipCumList):
        plt.plot(tX, vY)
 
 monteCarloPrecip(janPrecipCum)
-
-
 
 # %%
