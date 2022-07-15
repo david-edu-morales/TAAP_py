@@ -161,8 +161,12 @@ test = pd.DataFrame({
 dict_cmm_mx = {month: dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == month+1][['precip']] * day_list[month] for month in range(12)}
 df_cmm_26057 = pd.concat(dict_cmm_mx.values(), axis=0)
 df_cmm_26057 = df_cmm_26057.sort_index()
-df_cmm_26057.rename(columns={'precip':'precip_cum'})
+df_cmm_26057 = df_cmm_26057.rename(columns={'precip':'precip_cum'})
 # Create a dictionary of dfs utilizing a for loop and the resample_mean
 # dfs_mm_mx = {key: resample_mean(dfs_mx[key], cols_mx, 'M') for key in key_list_mx}
 
+# %%
+# Brief stat analysis
+for m in range(1,13):
+       print(df_cmm_26057[df_cmm_26057.index.month == m].std())
 # %%
