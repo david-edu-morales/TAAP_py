@@ -274,17 +274,6 @@ for m in range(1,13):
 
 # %%
 # Monte Carlo simulator to evaluate the significance of observed changes in mensual precip.
-
-janPrecipCum = dict_cmm_mx[0]['precip'].tail(40).values.tolist()      # example of target list for while loop
-dict_cmm_mx[0]['precip'].tail(40).plot()                              # actual plot of target list values
-
-'''    Code for randList to use in monteCarloPrecip
-randList = []
-for i in range(0,40):
-       n = random.randint(1,10)
-       randList.append(n)
-'''
-
 def monteCarloPrecip(precipCumList):
        global coef
 
@@ -311,25 +300,12 @@ def monteCarloPrecip(precipCumList):
 
        reg = linear_model.LinearRegression().fit(x_data, y_data)
        coef = reg.coef_
-       # inter = reg.intercept_           # don't need to plot the linreg 
-       # y_estimate = coef*x_data+inter   #    ""                 ""
-
-
-       '''
-       # Make the linear regression
-       database= df_mm_mx_last40.loc[df_mm_mx_last40['month']==i][[col,'year']]
-       database=database.dropna()
-
-       x_data = database['year'].values.reshape(database.shape[0],1)
-       y_data = database[col].values.reshape(database.shape[0],1)
-
-       reg = linear_model.LinearRegression().fit(x_data, y_data)
-       coef = reg.coef_
-       inter= reg.intercept_
-       y_estimate = coef*x_data+inter # y=mx+b, possible option to upgrade
-       '''
 
        plt.plot(tX, vY)
+
+# %%
+janPrecipCum = dict_cmm_mx[0]['precip'].tail(40).values.tolist()      # example of target list for while loop
+dict_cmm_mx[0]['precip'].tail(40).plot()                              # actual plot of target list values
 
 sampSize = 20 # number of iterations for Monte Carlo simulator
 counter = 1   # counter to keep track of iterated distributions
