@@ -275,7 +275,7 @@ for m in range(1,13):
 # %%
 # Monte Carlo simulator to evaluate the significance of observed changes in mensual precip.
 def monteCarloPrecip(precipCumList):
-       global coef
+       global coef   # linear regression variable will be added to list in iterator
 
        tX = [] # list to collect count of years for x-axis
        vY = [] # list to collect selected precip values for y-axis
@@ -295,27 +295,51 @@ def monteCarloPrecip(precipCumList):
        linearRegDf = pd.DataFrame(linearRegDict) # convert dictionary into dataframe
        linearRegDf = linearRegDf.dropna()        # drop nan-bearing rows from dataframe
 
-       x_data = linearRegDf['year'].values.reshape(linearRegDf.shape[0],1)
+       x_data = linearRegDf['year'].values.reshape(linearRegDf.shape[0],1)   # prep data for linreg
        y_data = linearRegDf['precip'].values.reshape(linearRegDf.shape[0],1)
 
        reg = linear_model.LinearRegression().fit(x_data, y_data)
        coef = reg.coef_
 
-       plt.plot(tX, vY)
+       #plt.plot(tX, vY)     # likely to be removed, aggregating linRegCoef is most important
 
 # %%
+# get start datetime
+startTime = datetime.now()
+
+# Set code for iterator
 janPrecipCum = dict_cmm_mx[0]['precip'].tail(40).values.tolist()      # example of target list for while loop
-dict_cmm_mx[0]['precip'].tail(40).plot()                              # actual plot of target list values
+#dict_cmm_mx[0]['precip'].tail(40).plot()                              # actual plot of target list values
 
-sampSize = 20 # number of iterations for Monte Carlo simulator
+# set variables for iterator
+sampSize = 100000 # number of iterations for Monte Carlo simulator
 counter = 1   # counter to keep track of iterated distributions
-linRegCoef = []
+linRegCoef = [] # create list for store linreg coefficients
 
+# iterate monte carlo simulator code
 while counter <= sampSize:  # setting the number of iterations to the chosen sample size
        monteCarloPrecip(janPrecipCum)
-       print(coef[0,0])
-       # plt.show()    # creates separate graphs for each iteration, comment out for one main plot
+       linRegCoef.append(40*coef[0,0])
+       #print(coef[0,0])
+       #plt.show()    # creates separate graphs for each iteration, comment out for one main plot
        
        counter += 1
 
+coefSeries = pd.Series(linRegCoef) # convert list of linreg coefficients to series
+coefSeries.plot.hist(bins=50)      # plot distribution of coefficients onto histogram
+
+# get end datetime
+endTime = datetime.now()
+
+# get execution time
+elapsedTime = endTime - startTime
+print('Execution time:', elapsedTime)
+
+# %%
+startTime = datetime.now()
+coefSeries.plot.hist(bins=50)      # plot distribution of coefficients onto histogram
+endTime = datetime.now()
+
+elapsedTime = endTime - startTime
+print('Execution time:', elapsedTime)
 # %%
