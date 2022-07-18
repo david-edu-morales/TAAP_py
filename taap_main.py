@@ -312,7 +312,7 @@ janPrecipCum = dict_cmm_mx[0]['precip'].tail(40).values.tolist()      # example 
 #dict_cmm_mx[0]['precip'].tail(40).plot()                              # actual plot of target list values
 
 # set variables for iterator
-sampSize = 100000 # number of iterations for Monte Carlo simulator
+sampSize = 1000000 # number of iterations for Monte Carlo simulator
 counter = 1   # counter to keep track of iterated distributions
 linRegCoef = [] # create list for store linreg coefficients
 
@@ -320,13 +320,15 @@ linRegCoef = [] # create list for store linreg coefficients
 while counter <= sampSize:  # setting the number of iterations to the chosen sample size
        monteCarloPrecip(janPrecipCum)
        linRegCoef.append(40*coef[0,0])
-       #print(coef[0,0])
        #plt.show()    # creates separate graphs for each iteration, comment out for one main plot
        
        counter += 1
 
+# plot distribution of coefficients onto histogram
 coefSeries = pd.Series(linRegCoef) # convert list of linreg coefficients to series
-coefSeries.plot.hist(bins=50)      # plot distribution of coefficients onto histogram
+ax = coefSeries.plot.hist(bins=50)
+ax.set_xlabel('[mm/40yr]')    
+ax.set_title('Monte Carlo Analysis of January Precipitation\nClimate Station 26057')
 
 # get end datetime
 endTime = datetime.now()
@@ -336,10 +338,8 @@ elapsedTime = endTime - startTime
 print('Execution time:', elapsedTime)
 
 # %%
-startTime = datetime.now()
-coefSeries.plot.hist(bins=50)      # plot distribution of coefficients onto histogram
-endTime = datetime.now()
 
-elapsedTime = endTime - startTime
-print('Execution time:', elapsedTime)
+ax = coefSeries.plot.hist(bins=50)
+ax.set_xlabel('[mm/40yr]')    
+ax.set_title('Monte Carlo Analysis of January Precipitation\nClimate Station 26057')
 # %%
