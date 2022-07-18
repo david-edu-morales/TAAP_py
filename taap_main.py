@@ -301,6 +301,12 @@ def monteCarloPrecip(precipCumList):
 
        plt.plot(tX, vY)
 
-monteCarloPrecip(janPrecipCum)
+sampSize = 20 # number of iterations for Monte Carlo simulator
+counter = 1   # counter to keep track of iterated distributions
+
+while counter <= sampSize:  # setting the number of iterations to the chosen sample size
+       monteCarloPrecip(janPrecipCum)
+       plt.show()    # creates separate graphs for each iteration, comment out for one main plot
+       counter += 1
 
 # %%
