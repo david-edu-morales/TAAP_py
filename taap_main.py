@@ -273,6 +273,9 @@ for m in range(1,13):
        print(df_cmm_26057[df_cmm_26057.index.month == m].std())
 
 # %%
+dict_tmax_cmm_mx = {month: dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == month+1][['tmax']] for month in range(12)}
+
+# %%
 # Monte Carlo simulator to evaluate the significance of observed changes in mensual precip.
 def monteCarloPrecip(precipCumList):
        global coef   # linear regression variable will be added to list in iterator
@@ -302,6 +305,35 @@ def monteCarloPrecip(precipCumList):
        coef = reg.coef_
 
        #plt.plot(tX, vY)     # likely to be removed, aggregating linRegCoef is most important
+
+# %%
+# Monte Carlo simulator to evaluate the significance of observed changes in mensual tmax.
+def monteCarloTmax(tmaxList):
+       global coef   # linear regression variable will be added to list in iterator
+
+       tX = [] # list to collect count of years for x-axis
+       vY = [] # list to collect selected precip values for y-axis
+
+       currentYear = 1      # counter to keep track of years
+
+       while currentYear <= 40:
+              roll = random.randint(0,39)        # generate random index place value
+              tmaxValue = tmaxList[roll]         # select corresponding precip value from list
+              tX.append(currentYear)             # add year value to list
+              vY.append(tmaxValue)               # add precip value to list
+
+              currentYear += 1
+              
+       # Calculate the linear regression
+       linearRegDict = {'year':tX, 'tmax':vY}  # merge year and precip lists into dictionary
+       linearRegDf = pd.DataFrame(linearRegDict) # convert dictionary into dataframe
+       linearRegDf = linearRegDf.dropna()        # drop nan-bearing rows from dataframe
+
+       x_data = linearRegDf['year'].values.reshape(linearRegDf.shape[0],1)   # prep data for linreg
+       y_data = linearRegDf['tmax'].values.reshape(linearRegDf.shape[0],1)
+
+       reg = linear_model.LinearRegression().fit(x_data, y_data)
+       coef = reg.coef_
 
 # %%
 # get start datetime
@@ -338,8 +370,37 @@ elapsedTime = endTime - startTime
 print('Execution time:', elapsedTime)
 
 # %%
+# get start datetime
+startTime = datetime.now()
 
+# Set code for iterator
+marTmax = dict_tmax_cmm_mx[2]['tmax'].tail(40).values.tolist()        # example of target list for while loop
+#dict_tmax_cmm_mx[2]['tmax'].tail(40).plot()                          # sample of actual plot
+
+# set variables for iterator
+sampSize = 1000000 # number of iterations for Monte Carlo simulator
+counter = 1   # counter to keep track of iterated distributions
+linRegCoef = [] # create list for store linreg coefficients
+
+# iterate monte carlo simulator code
+while counter <= sampSize:  # setting the number of iterations to the chosen sample size
+       monteCarloPrecip(marTmax)
+       linRegCoef.append(40*coef[0,0])
+       #plt.show()    # creates separate graphs for each iteration, comment out for one main plot
+       
+       counter += 1
+
+# plot distribution of coefficients onto histogram
+coefSeries = pd.Series(linRegCoef) # convert list of linreg coefficients to series
 ax = coefSeries.plot.hist(bins=50)
-ax.set_xlabel('[mm/40yr]')    
-ax.set_title('Monte Carlo Analysis of January Precipitation\nClimate Station 26057')
+ax.set_xlabel(degree_sign+'C/40yr')    
+ax.set_title('Monte Carlo Analysis of March tmax\nClimate Station 26057, n=' + str(sampSize))
+# ax.axvline(5.24, color='r') # shows the corresponding linreg coefficient value for 26057/tmax/March
+
+# get end datetime
+endTime = datetime.now()
+
+# get execution time
+elapsedTime = endTime - startTime
+print('Execution time:', elapsedTime)
 # %%
