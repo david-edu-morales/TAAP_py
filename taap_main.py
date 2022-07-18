@@ -286,27 +286,62 @@ for i in range(0,40):
 '''
 
 def monteCarloPrecip(precipCumList):
+       global tX
+       global vY
+       global coef
+
        tX = [] # list to collect count of years for x-axis
        vY = [] # list to collect selected precip values for y-axis
 
        currentYear = 1      # counter to keep track of years
 
        while currentYear <= 40:
-              roll = random.randint(0,39)
-              precipCumValue = precipCumList[roll]
-              tX.append(currentYear)
-              vY.append(precipCumValue)
+              roll = random.randint(0,39)               # generate random index place value
+              precipCumValue = precipCumList[roll]      # select corresponding precip value from list
+              tX.append(currentYear)                    # add year value to list
+              vY.append(precipCumValue)                 # add precip value to list
 
               currentYear += 1
+              
+       # Calculate the linear regression
+       linearRegDict = {'year':tX, 'precip':vY}  # merge year and precip lists into dictionary
+       linearRegDf = pd.DataFrame(linearRegDict) # convert dictionary into dataframe
+       linearRegDf = linearRegDf.dropna()        # drop nan-bearing rows from dataframe
+
+       x_data = linearRegDf['year'].values.reshape(linearRegDf.shape[0],1)
+       y_data = linearRegDf['precip'].values.reshape(linearRegDf.shape[0],1)
+
+       reg = linear_model.LinearRegression().fit(x_data, y_data)
+       coef = reg.coef_
+       # inter = reg.intercept_           # don't need to plot the linreg 
+       # y_estimate = coef*x_data+inter   #    ""                 ""
+
+
+       '''
+       # Make the linear regression
+       database= df_mm_mx_last40.loc[df_mm_mx_last40['month']==i][[col,'year']]
+       database=database.dropna()
+
+       x_data = database['year'].values.reshape(database.shape[0],1)
+       y_data = database[col].values.reshape(database.shape[0],1)
+
+       reg = linear_model.LinearRegression().fit(x_data, y_data)
+       coef = reg.coef_
+       inter= reg.intercept_
+       y_estimate = coef*x_data+inter # y=mx+b, possible option to upgrade
+       '''
 
        plt.plot(tX, vY)
 
 sampSize = 20 # number of iterations for Monte Carlo simulator
 counter = 1   # counter to keep track of iterated distributions
+linRegCoef = []
 
 while counter <= sampSize:  # setting the number of iterations to the chosen sample size
        monteCarloPrecip(janPrecipCum)
-       plt.show()    # creates separate graphs for each iteration, comment out for one main plot
+       print(coef[0,0])
+       # plt.show()    # creates separate graphs for each iteration, comment out for one main plot
+       
        counter += 1
 
 # %%
