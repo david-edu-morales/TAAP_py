@@ -286,8 +286,6 @@ for i in range(0,40):
 '''
 
 def monteCarloPrecip(precipCumList):
-       global tX
-       global vY
        global coef
 
        tX = [] # list to collect count of years for x-axis
