@@ -62,6 +62,70 @@ for key in keylist_mx:
        dict_mm_mx[key]['month'] = dict_mm_mx[key].index.month
 
 # %%
+# Automate 12-plot monthly mean plot for variables
+# Set up data & variables
+start, end = 1976, 2016 # set time frame to last forty years
+month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+degree_sign = u'\N{DEGREE SIGN}'
+
+for key in keylist_mx:
+
+       for col in cols_mx:
+              fig = plt.figure(figsize=(24,16))
+              fig.subplots_adjust(hspace=0.2, wspace=0.2)
+              fig.suptitle("Monthly Mean for "+col+"\nClimate Station "+str(key), fontsize=30)
+              
+              for i in range(1,13):
+                     ax = fig.add_subplot(3,4,i)
+                     #x = df_mm_mx_last40[df_mm_mx_last40.index.month == i].index.year
+                     x = dict_mm_mx[key][dict_mm_mx[key].index.month == i].tail(40).index.year
+                     #y = df_mm_mx_last40[df_mm_mx_last40.index.month == i][col]
+                     y = dict_mm_mx[key][dict_mm_mx[key].index.month == i][col].tail(40)
+
+                     ax.plot(x,y) # this plots the col values
+
+                     # Col-alike subplot formatting              
+                     ax.set_title(month_str[i-1], fontsize=20, fontweight='bold')
+
+                     # Make the linear regression
+                     #database= df_mm_mx_last40.loc[df_mm_mx_last40['month']==i][[col,'year']]
+                     database = dict_mm_mx[key].loc[dict_mm_mx[key]['month']==i][[col,'year']].tail(40)
+                     database=database.dropna()
+
+                     x_data = database['year'].values.reshape(database.shape[0],1)
+                     y_data = database[col].values.reshape(database.shape[0],1)
+
+                     reg = linear_model.LinearRegression().fit(x_data, y_data)
+                     coef = reg.coef_
+                     inter= reg.intercept_
+                     y_estimate = coef*x_data+inter # y=mx+b, possible option to upgrade
+
+                     ax.plot(x_data,y_estimate) # this plots the linear regression
+
+                     # Col-dependent subplot formatting
+                     if col == cols_mx[0]:
+                            ax.set_ylabel('mm')
+                            ax.text(.1, .8,
+                                   str(round((end-start)*coef[0,0],2))+'mm/40yr',
+                                   transform=ax.transAxes,
+                                   fontsize=24,
+                                   color='red')
+                     elif col == cols_mx[1]: # cannot figure out how to combine cols_mx[0:2]
+                            ax.set_ylabel('mm')
+                            ax.text(.1, .8,
+                                   str(round((end-start)*coef[0,0],2))+'mm/40yr',
+                                   transform=ax.transAxes,
+                                   fontsize=24,
+                                   color='red')
+                     else:
+                            ax.set_ylabel(degree_sign+'C')
+                            ax.text(.1, .8,
+                                   str(round((end-start)*coef[0,0],2))+degree_sign+'C/40yr',
+                                   transform=ax.transAxes,
+                                   fontsize=24,
+                                   color='red')
+
+# %%
 key_list_mx = [26013, 26057, 26164]
 filename_list_mx = [str(key_list_mx[key])+'_daily-record.txt' for key in range(len(key_list_mx))]
 # Create a list of dataframes
