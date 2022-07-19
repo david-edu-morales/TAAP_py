@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
+from random import randint
 from sklearn import linear_model
 import seaborn as sns
 sns.set(rc={'figure.figsize':(11, 4)})
@@ -18,34 +19,25 @@ import os
 # US data is analyzed @ line 140
 
 # Read the files into a df and clean the data
-# Create list of filenames
-key_list_mx = [26013, 26057, 26164]
-filename_list_mx = [str(key_list_mx[key])+'_daily-record.txt' for key in range(len(key_list_mx))]
+# Create list of climate station keys
+keylist_mx = [26013, 26057, 26164]
 
-filenameDict = {key_list_mx[key]: str(key_list_mx[key])+'_daily-record.txt' for key in range(len(key_list_mx))}
+# Create a dictionary of keys and filenames to call dataframes into another dictionary
+filenameDict = {keylist_mx[key]: str(keylist_mx[key])+'_daily-record.txt' for key in range(len(keylist_mx))}
 
-# Create a list of dataframes
-df_list_mx = [pd.read_fwf(filename,
-                          skiprows=19,
-                          skipfooter=1,
-                          names=['date',
-                                 'precip',
-                                 'evap',
-                                 'tmax',
-                                 'tmin'])
-              for filename in filename_list_mx]
-
+# Create a dictionary of keys and corresponding dataframes
 dict_mx = {key: pd.read_fwf(filename,
-                          skiprows=19,
-                          skipfooter=1,
-                          names=['date',
-                                 'precip',
-                                 'evap',
-                                 'tmax',
-                                 'tmin'])
+                            skiprows=19,
+                            skipfooter=1,
+                            names=['date',
+                                   'precip',
+                                   'evap',
+                                   'tmax',
+                                   'tmin'])
               for (key, filename) in filenameDict.items()}
 
-for key in key_list_mx:
+# Edit data and prep for analysis 
+for key in keylist_mx:
        dict_mx[key]['key'] = key                                             # add key column
        dict_mx[key] = dict_mx[key].replace({'Nulo': None}, regex=True)       # swap str to None type
        dict_mx[key] = dict_mx[key].replace({'ul' : None}, regex=True)
@@ -56,8 +48,32 @@ for key in key_list_mx:
        dict_mx[key] = dict_mx[key].set_index('date')                         # set to datetimeIndex
        dict_mx[key] = dict_mx[key].astype(float)                             # correct datatypes
        dict_mx[key]['key'] = dict_mx[key]['key'].astype(int)                 # reset key to int
-       dict_mx[key]['year'] = dict_mx[key].index.year                        # add year and month columns
-       dict_mx[key]['month'] = dict_mx[key].index.month
+       # dict_mx[key]['year'] = dict_mx[key].index.year                        # add year and month columns
+       # dict_mx[key]['month'] = dict_mx[key].index.month
+
+# %%
+# Resample data to a monthly mean
+cols_mx = ['precip', 'evap', 'tmax', 'tmin']     # specifiy columns to be resampled
+dict_mm_mx = {key: dict_mx[key][cols_mx].resample('M').mean() for key in keylist_mx}
+
+# Add year and month columns for each mensual mean to make graphing simpler
+for key in keylist_mx:
+       dict_mm_mx[key]['year'] = dict_mm_mx[key].index.year
+       dict_mm_mx[key]['month'] = dict_mm_mx[key].index.month
+
+# %%
+key_list_mx = [26013, 26057, 26164]
+filename_list_mx = [str(key_list_mx[key])+'_daily-record.txt' for key in range(len(key_list_mx))]
+# Create a list of dataframes
+df_list_mx = [pd.read_fwf(filename,
+                          skiprows=19,
+                          skipfooter=1,
+                          names=['date',
+                                 'precip',
+                                 'evap',
+                                 'tmax',
+                                 'tmin'])
+              for filename in filename_list_mx]
 
 # Add climate station key for each df
 for k in range(len(key_list_mx)):
@@ -88,7 +104,6 @@ data_mx['key'] = data_mx['key'].astype(int)      # reset key to integer
 data_mx['year'] = data_mx.index.year
 data_mx['month'] = data_mx.index.month
 
-# %%
 # Create a dictionary of dfs utilizing a for loop and the split_key_df function
 dfs_mx = {key: split_key_df(data_mx, key) for key in key_list_mx}
 
@@ -310,7 +325,7 @@ def monteCarloPrecip(precipCumList):
        currentYear = 1      # counter to keep track of years
 
        while currentYear <= 40:
-              roll = random.randint(0,39)               # generate random index place value
+              roll = randint(0,39)               # generate random index place value
               precipCumValue = precipCumList[roll]      # select corresponding precip value from list
               tX.append(currentYear)                    # add year value to list
               vY.append(precipCumValue)                 # add precip value to list
@@ -341,7 +356,7 @@ def monteCarloTmax(tmaxList):
        currentYear = 1      # counter to keep track of years
 
        while currentYear <= 40:
-              roll = random.randint(0,39)        # generate random index place value
+              roll = randint(0,39)        # generate random index place value
               tmaxValue = tmaxList[roll]         # select corresponding precip value from list
               tX.append(currentYear)             # add year value to list
               vY.append(tmaxValue)               # add precip value to list
@@ -368,7 +383,7 @@ janPrecipCum = dict_cmm_mx[0]['precip'].tail(40).values.tolist()      # example 
 #dict_cmm_mx[0]['precip'].tail(40).plot()                              # actual plot of target list values
 
 # set variables for iterator
-sampSize = 100000 # number of iterations for Monte Carlo simulator
+sampSize = 10000 # number of iterations for Monte Carlo simulator
 counter = 1   # counter to keep track of iterated distributions
 linRegCoef = [] # create list for store linreg coefficients
 
