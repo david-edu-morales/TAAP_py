@@ -22,39 +22,67 @@ import os
 key_list_mx = [26013, 26057, 26164]
 filename_list_mx = [str(key_list_mx[key])+'_daily-record.txt' for key in range(len(key_list_mx))]
 
-# Create a list of dfs
-df_list_mx = [pd.read_fwf(filename, skiprows=19, skipfooter=1,
-                   names=['date',
-                          'precip',
-                          'evap',
-                          'tmax',
-                          'tmin'])
-       for filename in filename_list_mx]
+filenameDict = {key_list_mx[key]: str(key_list_mx[key])+'_daily-record.txt' for key in range(len(key_list_mx))}
+
+# Create a list of dataframes
+df_list_mx = [pd.read_fwf(filename,
+                          skiprows=19,
+                          skipfooter=1,
+                          names=['date',
+                                 'precip',
+                                 'evap',
+                                 'tmax',
+                                 'tmin'])
+              for filename in filename_list_mx]
+
+dict_mx = {key: pd.read_fwf(filename,
+                          skiprows=19,
+                          skipfooter=1,
+                          names=['date',
+                                 'precip',
+                                 'evap',
+                                 'tmax',
+                                 'tmin'])
+              for (key, filename) in filenameDict.items()}
+
+for key in key_list_mx:
+       dict_mx[key]['key'] = key                                             # add key column
+       dict_mx[key] = dict_mx[key].replace({'Nulo': None}, regex=True)       # swap str to None type
+       dict_mx[key] = dict_mx[key].replace({'ul' : None}, regex=True)
+       dict_mx[key]['date'] = pd.to_datetime(dict_mx[key]['date'],           # correct date format
+                                             infer_datetime_format=True,
+                                             dayfirst=True,
+                                             format='%Y-%m-%d')
+       dict_mx[key] = dict_mx[key].set_index('date')                         # set to datetimeIndex
+       dict_mx[key] = dict_mx[key].astype(float)                             # correct datatypes
+       dict_mx[key]['key'] = dict_mx[key]['key'].astype(int)                 # reset key to int
+       dict_mx[key]['year'] = dict_mx[key].index.year                        # add year and month columns
+       dict_mx[key]['month'] = dict_mx[key].index.month
 
 # Add climate station key for each df
 for k in range(len(key_list_mx)):
        df_list_mx[k]['key'] = key_list_mx[k]
 
-# Concatenate dfs
+# Concatenate dataframes from list into a single dataframe
 data_mx = pd.concat(df_list_mx)
 
 # Swap strings to None type
 data_mx = data_mx.replace({'Nulo': None}, regex=True)
-data_mx = data_mx.replace({'ul' : None}, regex=True) # Necessary, but could not find anything using 
-                                               # data.loc[data['evap'] == 'ul']
+data_mx = data_mx.replace({'ul' : None}, regex=True)    # Necessary, but could not find anything using 
+                                                        # data.loc[data['evap'] == 'ul']
 
 # Set dates to correct format
 data_mx['date'] = pd.to_datetime(data_mx['date'],
-                              infer_datetime_format=True,
-                              dayfirst=True,
-                              format='%Y-%m-%d')
+                                 infer_datetime_format=True,
+                                 dayfirst=True,
+                                 format='%Y-%m-%d')
 
-# Set df index to the datetime
+# Set index to datetimeIndex
 data_mx = data_mx.set_index('date')
 
 # Assign float type to data and int type to key
 data_mx = data_mx.astype(float)
-data_mx['key'] = data_mx['key'].astype(int)
+data_mx['key'] = data_mx['key'].astype(int)      # reset key to integer
 
 # Add month and year columns to df
 data_mx['year'] = data_mx.index.year
