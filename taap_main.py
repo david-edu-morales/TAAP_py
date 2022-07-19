@@ -48,8 +48,6 @@ for key in keylist_mx:
        dict_mx[key] = dict_mx[key].set_index('date')                         # set to datetimeIndex
        dict_mx[key] = dict_mx[key].astype(float)                             # correct datatypes
        dict_mx[key]['key'] = dict_mx[key]['key'].astype(int)                 # reset key to int
-       # dict_mx[key]['year'] = dict_mx[key].index.year                        # add year and month columns
-       # dict_mx[key]['month'] = dict_mx[key].index.month
 
 # %%
 # Resample data to a monthly mean
@@ -77,9 +75,7 @@ for key in keylist_mx:
               
               for i in range(1,13):
                      ax = fig.add_subplot(3,4,i)
-                     #x = df_mm_mx_last40[df_mm_mx_last40.index.month == i].index.year
                      x = dict_mm_mx[key][dict_mm_mx[key].index.month == i].tail(40).index.year
-                     #y = df_mm_mx_last40[df_mm_mx_last40.index.month == i][col]
                      y = dict_mm_mx[key][dict_mm_mx[key].index.month == i][col].tail(40)
 
                      ax.plot(x,y) # this plots the col values
