@@ -20,11 +20,7 @@ import os
 # Read the files into a df and clean the data
 # Create list of filenames
 key_list_mx = [26013, 26057, 26164]
-filename_list_mx = []
-
-for k in range(len(key_list_mx)):
-       filename = str(key_list_mx[k]) + '_daily-record.txt'
-       filename_list_mx.append(filename)
+filename_list_mx = [str(key_list_mx[key])+'_daily-record.txt' for key in range(len(key_list_mx))]
 
 # Create a list of dfs
 df_list_mx = [pd.read_fwf(filename, skiprows=19, skipfooter=1,
@@ -344,7 +340,7 @@ janPrecipCum = dict_cmm_mx[0]['precip'].tail(40).values.tolist()      # example 
 #dict_cmm_mx[0]['precip'].tail(40).plot()                              # actual plot of target list values
 
 # set variables for iterator
-sampSize = 1000000 # number of iterations for Monte Carlo simulator
+sampSize = 100000 # number of iterations for Monte Carlo simulator
 counter = 1   # counter to keep track of iterated distributions
 linRegCoef = [] # create list for store linreg coefficients
 
@@ -378,7 +374,7 @@ marTmax = dict_tmax_cmm_mx[2]['tmax'].tail(40).values.tolist()        # example 
 #dict_tmax_cmm_mx[2]['tmax'].tail(40).plot()                          # sample of actual plot
 
 # set variables for iterator
-sampSize = 1000000 # number of iterations for Monte Carlo simulator
+sampSize = 100000 # number of iterations for Monte Carlo simulator
 counter = 1   # counter to keep track of iterated distributions
 linRegCoef = [] # create list for store linreg coefficients
 
@@ -403,4 +399,5 @@ endTime = datetime.now()
 # get execution time
 elapsedTime = endTime - startTime
 print('Execution time:', elapsedTime)
-# %%
+
+
