@@ -17,10 +17,8 @@ import os
 # %%
 # *** MEXICAN CLIMATE STATIONS ***
 # US data is analyzed @ line 140
-
 # Read the files into a df and clean the data
-# Create list of climate station keys
-keylist_mx = [26013, 26057, 26164]
+keylist_mx = [26013, 26057, 26164]        # create list of climate station keys
 
 # Create a dictionary of keys and filenames to call dataframes into another dictionary
 filenameDict = {keylist_mx[key]: str(keylist_mx[key])+'_daily-record.txt' for key in range(len(keylist_mx))}
@@ -135,6 +133,7 @@ for key in keylist_mx:
                                    fontsize=24,
                                    color='red')
 
+# %%
 # Return recorded coefficients into dictionary
 dfCoef = pd.read_csv(csvFile, delimiter=',', usecols=headerList)
 dictCoef = {key: dfCoef[dfCoef['key'] == key] for key in keylist_mx}
@@ -401,9 +400,10 @@ def monteCarloPrecip(precipCumList):
        vY = [] # list to collect selected precip values for y-axis
 
        currentYear = 1      # counter to keep track of years
+       listLen = len(precipCumList)
 
-       while currentYear <= 40:
-              roll = randint(0,39)               # generate random index place value
+       while currentYear <= listLen:
+              roll = randint(0,listLen)               # generate random index place value
               precipCumValue = precipCumList[roll]      # select corresponding precip value from list
               tX.append(currentYear)                    # add year value to list
               vY.append(precipCumValue)                 # add precip value to list
@@ -521,4 +521,68 @@ endTime = datetime.now()
 elapsedTime = endTime - startTime
 print('Execution time:', elapsedTime)
 
+# %%
+# Automate the iterator to run through all station/variable/month MCA distributions
+# get start datetime
+startTime = datetime.now()
 
+for key in keylist_mx:
+       print(str(key))
+       for col in cols_mx:
+              print(col)
+              for month in range(1,13):
+                     print(str(month))
+                     dataset = dict_mm_mx[key][dict_mm_mx[key]['month']==month][col].tail(40).values.tolist()
+
+                     sampSize = 100
+                     counter = 1
+                     linRegCoef = []
+
+                     while counter <= sampSize:
+                            monteCarloPrecip(dataset)
+                            linRegCoef.append(40*coef[0,0])
+                     
+                            counter += 1
+
+                     coefSeries = pd.Series(linRegCoef)
+                     ax = coefSeries.plot.hist(bins=50)
+                     ax.set_xlabel(col)
+                     ax.set_title('Monte Carlo Analysis of'+month_str[month-1]+col+'\nClimate Station '+str(key)+', n='+str(sampSize))
+
+endTime = datetime.now()
+elapsedTime = endTime - startTime
+print('Execution time:', elapsedTime)
+
+# # Set code for iterator
+# marTmax = dict_tmax_cmm_mx[2]['tmax'].tail(40).values.tolist()        # example of target list for while loop
+# #dict_tmax_cmm_mx[2]['tmax'].tail(40).plot()                          # sample of actual plot
+
+# # set variables for iterator
+# sampSize = 100000 # number of iterations for Monte Carlo simulator
+# counter = 1   # counter to keep track of iterated distributions
+# linRegCoef = [] # create list for store linreg coefficients
+
+# # iterate monte carlo simulator code
+# while counter <= sampSize:  # setting the number of iterations to the chosen sample size
+#        monteCarloPrecip(marTmax)
+#        linRegCoef.append(40*coef[0,0])
+#        #plt.show()    # creates separate graphs for each iteration, comment out for one main plot
+       
+#        counter += 1
+
+# # plot distribution of coefficients onto histogram
+# coefSeries = pd.Series(linRegCoef) # convert list of linreg coefficients to series
+# ax = coefSeries.plot.hist(bins=50)
+# ax.set_xlabel(degree_sign+'C/40yr')    
+# ax.set_title('Monte Carlo Analysis of March tmax\nClimate Station 26057, n=' + str(sampSize))
+# # ax.axvline(5.24, color='r') # shows the corresponding linreg coefficient value for 26057/tmax/March
+
+# # get end datetime
+# endTime = datetime.now()
+
+# # get execution time
+# elapsedTime = endTime - startTime
+# print('Execution time:', elapsedTime)
+
+
+# %%
