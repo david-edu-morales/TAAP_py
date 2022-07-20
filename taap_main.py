@@ -527,28 +527,39 @@ print('Execution time:', elapsedTime)
 startTime = datetime.now()
 
 for key in keylist_mx:
-       #print(str(key))
+
        for col in cols_mx:
-              #print(col)
+
               for month in range(1,13):
-                     #print(str(month))
-                     dataset = dict_mm_mx[key][dict_mm_mx[key]['month']==month][col].tail(40).values.tolist()
+                     # Select data from observed record for the iterator
+                     dataset = dict_mm_mx[key][dict_mm_mx[key]['month']==month]\
+                               [col].tail(40).values.tolist()
 
-                     sampSize = 100
-                     counter = 1
-                     linRegCoef = []
+                     # Select observed linreg coef to plot on MCA distribution
+                     obsCoef = dictCoef[key][(dictCoef[key]['variable']==col)\
+                               & (dictCoef[key]['month']==month)]['coef'].values[0]
 
-                     while counter <= sampSize:
+                     sampSize = 1000      # number of iterations for MCA
+                     counter = 1          # counter to keep track of iterated distributions
+                     linRegCoef = []      # create list for storing generated linreg coefs
+
+                     # iterate Monte Carlo simulator code
+                     while counter <= sampSize:  # iterate to chosen sample size
                             monteCarloPrecip(dataset)
                             linRegCoef.append(40*coef[0,0])
                      
                             counter += 1
-
-                     coefSeries = pd.Series(linRegCoef)
-                     ax = coefSeries.plot.hist(bins=50)
+                     
+                     # plot distribution of coefficients onto histogram
+                     coefSeries = pd.Series(linRegCoef) # convert list of linregCoef to Series
+                     ax = coefSeries.plot.hist(bins=50) # generate histogram of linregCoef
+                     ax.axvline(obsCoef, color='r')     # plots corresponding linregCoef
                      ax.set_xlabel(col)
-                     ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+col+'\nClimate Station '+str(key)+', n='+str(sampSize))
-                     plt.show()
+                     ax.set_ylabel('Count')
+                     ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+col+\
+                                  '\nClimate Station '+str(key)+', n='+str(sampSize))
+                     plt.show()                         # plots each MCA distribution
+
 endTime = datetime.now()
 elapsedTime = endTime - startTime
 print('Execution time:', elapsedTime)
