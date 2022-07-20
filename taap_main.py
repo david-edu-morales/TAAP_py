@@ -60,8 +60,9 @@ for key in keylist_mx:
 # %%
 # Automate 12-plot monthly mean plot for variables
 # Set up csv file to record linear regression trends
+csvFile = 'climateStationTrends_taap.csv'
 headerList = ['key', 'variable', 'month', 'coef']              # header names in a list
-with open('climateStationTrends_taap.csv', 'w') as file:       # set mode to write w/ truncation
+with open(csvFile, 'w') as file:       # set mode to write w/ truncation
        dw = csv.DictWriter(file, delimiter=',',
                            fieldnames=headerList)
        dw.writeheader()                                        # add headers to csv
@@ -74,6 +75,7 @@ degree_sign = u'\N{DEGREE SIGN}'
 for key in keylist_mx:
 
        for col in cols_mx:
+
               fig = plt.figure(figsize=(24,16))
               fig.subplots_adjust(hspace=0.2, wspace=0.2)
               fig.suptitle("Monthly Mean for "+col+"\nClimate Station "+str(key), fontsize=30)
@@ -106,7 +108,7 @@ for key in keylist_mx:
                      # Save the observed trends to a csv to be plotted on monte carlo distribution
                      saveLine = '\n'+str(key)+','+str(col)+','+str(month)+','+str(40*coef[0,0])
 
-                     saveFile = open('climateStationTrends_taap.csv', 'a')   # reopen csv file
+                     saveFile = open(csvFile, 'a')   # reopen csv file
                      saveFile.write(saveLine)                                # append the saved row
                      saveFile.close()
 
@@ -132,6 +134,10 @@ for key in keylist_mx:
                                    transform=ax.transAxes,
                                    fontsize=24,
                                    color='red')
+
+# Return recorded coefficients into dictionary
+dfCoef = pd.read_csv(csvFile, delimiter=',', usecols=headerList)
+dictCoef = {key: dfCoef[dfCoef['key'] == key] for key in keylist_mx}
 
 # %%
 key_list_mx = [26013, 26057, 26164]
