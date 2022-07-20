@@ -403,7 +403,7 @@ def monteCarloPrecip(precipCumList):
        listLen = len(precipCumList)
 
        while currentYear <= listLen:
-              roll = randint(0,listLen)               # generate random index place value
+              roll = randint(0,(listLen-1))               # generate random index place value
               precipCumValue = precipCumList[roll]      # select corresponding precip value from list
               tX.append(currentYear)                    # add year value to list
               vY.append(precipCumValue)                 # add precip value to list
@@ -527,11 +527,11 @@ print('Execution time:', elapsedTime)
 startTime = datetime.now()
 
 for key in keylist_mx:
-       print(str(key))
+       #print(str(key))
        for col in cols_mx:
-              print(col)
+              #print(col)
               for month in range(1,13):
-                     print(str(month))
+                     #print(str(month))
                      dataset = dict_mm_mx[key][dict_mm_mx[key]['month']==month][col].tail(40).values.tolist()
 
                      sampSize = 100
@@ -547,8 +547,8 @@ for key in keylist_mx:
                      coefSeries = pd.Series(linRegCoef)
                      ax = coefSeries.plot.hist(bins=50)
                      ax.set_xlabel(col)
-                     ax.set_title('Monte Carlo Analysis of'+month_str[month-1]+col+'\nClimate Station '+str(key)+', n='+str(sampSize))
-
+                     ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+col+'\nClimate Station '+str(key)+', n='+str(sampSize))
+                     plt.show()
 endTime = datetime.now()
 elapsedTime = endTime - startTime
 print('Execution time:', elapsedTime)
