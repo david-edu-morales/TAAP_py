@@ -5,7 +5,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import random
+import csv
 from random import randint
 from sklearn import linear_model
 import seaborn as sns
@@ -59,6 +59,13 @@ for key in keylist_mx:
 
 # %%
 # Automate 12-plot monthly mean plot for variables
+# Set up csv file to record linear regression trends
+headerList = ['key', 'variable', 'month', 'coef']              # header names in a list
+with open('climateStationTrends_taap.csv', 'w') as file:       # set mode to write w/ truncation
+       dw = csv.DictWriter(file, delimiter=',',
+                           fieldnames=headerList)
+       dw.writeheader()                                        # add headers to csv
+
 # Set up data & variables
 start, end = 1976, 2016 # set time frame to last forty years
 month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -71,20 +78,20 @@ for key in keylist_mx:
               fig.subplots_adjust(hspace=0.2, wspace=0.2)
               fig.suptitle("Monthly Mean for "+col+"\nClimate Station "+str(key), fontsize=30)
               
-              for i in range(1,13):
-                     ax = fig.add_subplot(3,4,i)
-                     x = dict_mm_mx[key][dict_mm_mx[key].index.month == i].tail(40).index.year
-                     y = dict_mm_mx[key][dict_mm_mx[key].index.month == i][col].tail(40)
+              for month in range(1,13):
+                     ax = fig.add_subplot(3,4,month)    # creates a 12-plot fig (3r x 4c)
 
-                     ax.plot(x,y) # this plots the col values
+                     x = dict_mm_mx[key][dict_mm_mx[key].index.month == month].tail(40).index.year
+                     y = dict_mm_mx[key][dict_mm_mx[key].index.month == month][col].tail(40)
+
+                     ax.plot(x,y)  # this plots the col values
 
                      # Col-alike subplot formatting              
                      ax.set_title(month_str[i-1], fontsize=20, fontweight='bold')
 
                      # Make the linear regression
-                     #database= df_mm_mx_last40.loc[df_mm_mx_last40['month']==i][[col,'year']]
-                     database = dict_mm_mx[key].loc[dict_mm_mx[key]['month']==i][[col,'year']].tail(40)
-                     database=database.dropna()
+                     database = dict_mm_mx[key].loc[dict_mm_mx[key]['month']==month][[col,'year']].tail(40)
+                     database = database.dropna()
 
                      x_data = database['year'].values.reshape(database.shape[0],1)
                      y_data = database[col].values.reshape(database.shape[0],1)
@@ -95,6 +102,13 @@ for key in keylist_mx:
                      y_estimate = coef*x_data+inter # y=mx+b, possible option to upgrade
 
                      ax.plot(x_data,y_estimate) # this plots the linear regression
+
+                     # Save the observed trends to a csv to be plotted on monte carlo distribution
+                     saveLine = '\n'+str(key)+','+str(col)+','+str(month)+','+str(40*coef[0,0])
+
+                     saveFile = open('climateStationTrends_taap.csv', 'a')   # reopen csv file
+                     saveFile.write(saveLine)                                # append the saved row
+                     saveFile.close()
 
                      # Col-dependent subplot formatting
                      if col == cols_mx[0]:
