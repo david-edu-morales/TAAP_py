@@ -38,7 +38,6 @@ dict_mx = {key: pd.read_fwf(filename,
 
 # Edit data and prep for analysis 
 for key in keylist_mx:
-       dict_mx[key]['key'] = key                                             # add key column
        dict_mx[key] = dict_mx[key].replace({'Nulo': None}, regex=True)       # swap str to None type
        dict_mx[key] = dict_mx[key].replace({'ul' : None}, regex=True)
        dict_mx[key]['date'] = pd.to_datetime(dict_mx[key]['date'],           # correct date format
@@ -47,7 +46,6 @@ for key in keylist_mx:
                                              format='%Y-%m-%d')
        dict_mx[key] = dict_mx[key].set_index('date')                         # set to datetimeIndex
        dict_mx[key] = dict_mx[key].astype(float)                             # correct datatypes
-       dict_mx[key]['key'] = dict_mx[key]['key'].astype(int)                 # reset key to int
 
 # %%
 # Resample data to a monthly mean
