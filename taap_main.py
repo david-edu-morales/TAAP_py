@@ -15,11 +15,20 @@ from tkinter import N
 import os
 
 # %%
+# Set up variables
+keylist_mx = [26013, 26057, 26164]                      # create list of climate station keys
+cols_mx = ['precip', 'evap', 'tmax', 'tmin']            # specifiy columns to be resampled
+csvFile = 'climateStationTrends_taap.csv'               # csv filename to collect linRegCoefs
+headerList = ['key', 'variable', 'month', 'coef']       # header names for csv of linRegCoefs
+month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun',\
+             'Jul','Aug','Sep','Oct','Nov','Dec']       # setup month names for graph
+degree_sign = u'\N{DEGREE SIGN}'                        # degree sign code
+
+
+# %%
 # *** MEXICAN CLIMATE STATIONS ***
 # US data is analyzed @ line 140
 # Read the files into a df and clean the data
-keylist_mx = [26013, 26057, 26164]        # create list of climate station keys
-
 # Create a dictionary of keys and filenames to call dataframes into another dictionary
 filenameDict = {keylist_mx[key]: str(keylist_mx[key])+'_daily-record.txt' for key in range(len(keylist_mx))}
 
@@ -47,7 +56,6 @@ for key in keylist_mx:
 
 # %%
 # Resample data to a monthly mean
-cols_mx = ['precip', 'evap', 'tmax', 'tmin']     # specifiy columns to be resampled
 dict_mm_mx = {key: dict_mx[key][cols_mx].resample('M').mean() for key in keylist_mx}
 
 # Add year and month columns for each mensual mean to make graphing simpler
@@ -58,8 +66,6 @@ for key in keylist_mx:
 # %%
 # Automate 12-plot monthly mean plot for variables
 # Set up csv file to record linear regression trends
-csvFile = 'climateStationTrends_taap.csv'
-headerList = ['key', 'variable', 'month', 'coef']              # header names in a list
 with open(csvFile, 'w') as file:       # set mode to write w/ truncation
        dw = csv.DictWriter(file, delimiter=',',
                            fieldnames=headerList)
@@ -67,8 +73,6 @@ with open(csvFile, 'w') as file:       # set mode to write w/ truncation
 
 # Set up data & variables
 start, end = 1976, 2016 # set time frame to last forty years
-month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-degree_sign = u'\N{DEGREE SIGN}'
 
 for key in keylist_mx:
 
@@ -539,7 +543,7 @@ for key in keylist_mx:
                      obsCoef = dictCoef[key][(dictCoef[key]['variable']==col)\
                                & (dictCoef[key]['month']==month)]['coef'].values[0]
 
-                     sampSize = 1000      # number of iterations for MCA
+                     sampSize = 10000     # number of iterations for MCA
                      counter = 1          # counter to keep track of iterated distributions
                      linRegCoef = []      # create list for storing generated linreg coefs
 
