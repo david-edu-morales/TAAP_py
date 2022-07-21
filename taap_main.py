@@ -145,6 +145,10 @@ for key in keylist_mx:
 dfCoef = pd.read_csv(csvFile, delimiter=',', usecols=headerList)
 dictCoef = {key: dfCoef[dfCoef['key'] == key] for key in keylist_mx}
 
+# Reset index for each dataframe to make appending easier
+for key in keylist_mx:
+       dictCoef[key].reset_index(drop=True, inplace=True)
+
 # %%
 # *** US CLIMATE STATIONS ***
 
@@ -297,7 +301,11 @@ def monteCarloGenerator(obsValueList):
 # get start datetime
 startTime = datetime.now()
 
+placeHolderList = []
+
 for key in keylist_mx:
+       flag = 0
+       placeHolderDf = dictCoef[key].copy()
 
        for col in cols_mx:
 
@@ -318,11 +326,27 @@ for key in keylist_mx:
                      while counter <= sampSize:  # iterate to chosen sample size
                             monteCarloGenerator(dataset)
                             linRegCoef.append(40*coef[0,0])
-                     
+                    
                             counter += 1
+
+                     coefSeries = pd.Series(linRegCoef) # convert list of linregCoef to Series
+                     lrcSD, lrcMean, lrcMode = coefSeries.std(), coefSeries.mean(), coefSeries.mode()
+
+                     placeHolderDf.loc[flag, 'sd'] = lrcSD
+                     placeHolderDf.loc[flag, 'mean'] = lrcMean
+                     placeHolderDf.loc[flag, 'mode'] = lrcMode
+
+                     flag +=1
+
+                     # Save the stat variables to a csv for analysis
+                     saveLine = '\n'+str(key)+','+str(col)+','+str(month)+','+str(40*coef[0,0])
+
+                     saveFile = open(csvFile, 'a')   # reopen csv file
+                     saveFile.write(saveLine)        # append the saved row
+                     saveFile.close()
                      '''
                      # plot distribution of coefficients onto histogram
-                     coefSeries = pd.Series(linRegCoef) # convert list of linregCoef to Series
+                     
                      ax = coefSeries.plot.hist(bins=50) # generate histogram of linregCoef
                      ax.axvline(obsCoef, color='r')     # plots corresponding linregCoef
                      ax.set_xlabel(col)
@@ -331,6 +355,8 @@ for key in keylist_mx:
                                   '\nClimate Station '+str(key)+', n='+str(sampSize))
                      plt.show()                         # plots each MCA distribution
                      '''
+       placeHolderList.append(placeHolderDf)
+
 endTime = datetime.now()
 elapsedTime = endTime - startTime
 print('Execution time:', elapsedTime)
