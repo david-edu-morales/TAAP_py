@@ -396,36 +396,34 @@ for m in range(1,13):
 dict_tmax_cmm_mx = {month: dfs_mm_mx[26057][dfs_mm_mx[26057]['month'] == month+1][['tmax']] for month in range(12)}
 
 # %%
-# Monte Carlo simulator to evaluate the significance of observed changes in mensual precip.
-def monteCarloPrecip(precipCumList):
+# Monte Carlo function to generate randomized sample of observed values for given timeframe.
+def monteCarloGenerator(obsValueList):
        global coef   # linear regression variable will be added to list in iterator
 
        tX = [] # list to collect count of years for x-axis
-       vY = [] # list to collect selected precip values for y-axis
+       vY = [] # list to collect randomized observed values for y-axis
 
-       currentYear = 1      # counter to keep track of years
-       listLen = len(precipCumList)
-
+       currentYear = 1                    # counter to keep track of years
+       listLen = len(obsValueList)        # create limit of rolls and range of position values
+                                          # not all station/variable/month datasets are same size
        while currentYear <= listLen:
-              roll = randint(0,(listLen-1))               # generate random index place value
-              precipCumValue = precipCumList[roll]      # select corresponding precip value from list
+              roll = randint(0,(listLen-1))             # generate random index place value
+              selectedValue = obsValueList[roll]       # select corresponding precip value from list
               tX.append(currentYear)                    # add year value to list
-              vY.append(precipCumValue)                 # add precip value to list
+              vY.append(selectedValue)                 # add precip value to list
 
               currentYear += 1
               
        # Calculate the linear regression
-       linearRegDict = {'year':tX, 'precip':vY}  # merge year and precip lists into dictionary
-       linearRegDf = pd.DataFrame(linearRegDict) # convert dictionary into dataframe
-       linearRegDf = linearRegDf.dropna()        # drop nan-bearing rows from dataframe
+       selValDict = {'year':tX,'variable':vY}    # merge selectedValue and counter lists into dict
+       selValDf = pd.DataFrame(selValDict)       # convert dictionary into dataframe
+       selValDf = selValDf.dropna()              # drop NaN-bearing rows from dataframe
 
-       x_data = linearRegDf['year'].values.reshape(linearRegDf.shape[0],1)   # prep data for linreg
-       y_data = linearRegDf['precip'].values.reshape(linearRegDf.shape[0],1)
+       x_data = selValDf['year'].values.reshape(selValDf.shape[0],1)   # prep data for linreg
+       y_data = selValDf['precip'].values.reshape(selValDf.shape[0],1)
 
        reg = linear_model.LinearRegression().fit(x_data, y_data)
        coef = reg.coef_
-
-       #plt.plot(tX, vY)     # likely to be removed, aggregating linRegCoef is most important
 
 # %%
 # Monte Carlo simulator to evaluate the significance of observed changes in mensual tmax.
@@ -471,7 +469,7 @@ linRegCoef = [] # create list for store linreg coefficients
 
 # iterate monte carlo simulator code
 while counter <= sampSize:  # setting the number of iterations to the chosen sample size
-       monteCarloPrecip(janPrecipCum)
+       monteCarloGenerator(janPrecipCum)
        linRegCoef.append(40*coef[0,0])
        #plt.show()    # creates separate graphs for each iteration, comment out for one main plot
        
@@ -549,11 +547,11 @@ for key in keylist_mx:
 
                      # iterate Monte Carlo simulator code
                      while counter <= sampSize:  # iterate to chosen sample size
-                            monteCarloPrecip(dataset)
+                            monteCarloGenerator(dataset)
                             linRegCoef.append(40*coef[0,0])
                      
                             counter += 1
-                     
+                     '''
                      # plot distribution of coefficients onto histogram
                      coefSeries = pd.Series(linRegCoef) # convert list of linregCoef to Series
                      ax = coefSeries.plot.hist(bins=50) # generate histogram of linregCoef
@@ -563,7 +561,7 @@ for key in keylist_mx:
                      ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+col+\
                                   '\nClimate Station '+str(key)+', n='+str(sampSize))
                      plt.show()                         # plots each MCA distribution
-
+                     '''
 endTime = datetime.now()
 elapsedTime = endTime - startTime
 print('Execution time:', elapsedTime)
