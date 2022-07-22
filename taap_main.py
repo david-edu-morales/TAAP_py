@@ -19,6 +19,7 @@ import os
 keylist_mx = [26013, 26057, 26164]                      # create list of climate station keys
 cols_mx = ['precip', 'evap', 'tmax', 'tmin']            # specifiy columns to be resampled
 csvFile = 'climateStationTrends_taap.csv'               # csv filename to collect linRegCoefs
+csvFileMx = 'climateStationTrends_taap_mx.csv'
 headerList = ['key', 'variable', 'month', 'coef']       # header names for csv of linRegCoefs
 month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun',\
              'Jul','Aug','Sep','Oct','Nov','Dec']       # setup month names for graph
@@ -92,7 +93,7 @@ for key in keylist_mx:
                      ax.plot(x,y)  # this plots the col values
 
                      # Col-alike subplot formatting              
-                     ax.set_title(month_str[i-1], fontsize=20, fontweight='bold')
+                     ax.set_title(month_str[month-1], fontsize=20, fontweight='bold')
 
                      # Make the linear regression
                      database = dict_mm_mx[key].loc[dict_mm_mx[key]['month']==month][[col,'year']].tail(40)
@@ -142,7 +143,7 @@ for key in keylist_mx:
 
 # %%
 # Return recorded coefficients into dictionary
-dfCoef = pd.read_csv(csvFile, delimiter=',', usecols=headerList)
+dfCoef = pd.read_csv(csvFileMx, delimiter=',', usecols=headerList)
 dictCoef = {key: dfCoef[dfCoef['key'] == key] for key in keylist_mx}
 
 # Reset index for each dataframe to make appending easier
@@ -301,11 +302,11 @@ def monteCarloGenerator(obsValueList):
 # get start datetime
 startTime = datetime.now()
 
-placeHolderList = []
-
 for key in keylist_mx:
-       flag = 0
-       placeHolderDf = dictCoef[key].copy()
+       
+       tempDf = dictCoef[key]      # shorten name for readability 
+       lrcSdList = []              # reset SD list for each key and append to dictCoef
+       lrcMeanList = []            # reset mean list for each key and append to dictCoef
 
        for col in cols_mx:
 
@@ -318,7 +319,7 @@ for key in keylist_mx:
                      obsCoef = dictCoef[key][(dictCoef[key]['variable']==col)\
                                & (dictCoef[key]['month']==month)]['coef'].values[0]
 
-                     sampSize = 10     # number of iterations for MCA
+                     sampSize = 10        # number of iterations for MCA
                      counter = 1          # counter to keep track of iterated distributions
                      linRegCoef = []      # create list for storing generated linreg coefs
 
@@ -329,21 +330,13 @@ for key in keylist_mx:
                     
                             counter += 1
 
-                     coefSeries = pd.Series(linRegCoef) # convert list of linregCoef to Series
-                     lrcSD, lrcMean, lrcMode = coefSeries.std(), coefSeries.mean(), coefSeries.mode()
+                     # collect information about generated linreg statistics (SD and mean)
+                     coefSeries = pd.Series(linRegCoef)                      # linregCoef to Series
+                     lrcSD, lrcMean = coefSeries.std(), coefSeries.mean()    # define SD and mean
 
-                     placeHolderDf.loc[flag, 'sd'] = lrcSD
-                     placeHolderDf.loc[flag, 'mean'] = lrcMean
-                     placeHolderDf.loc[flag, 'mode'] = lrcMode
+                     lrcSdList.append(lrcSD)                                 # append SD to list
+                     lrcMeanList.append(lrcMean)                             # append mean to list
 
-                     flag +=1
-
-                     # Save the stat variables to a csv for analysis
-                     saveLine = '\n'+str(key)+','+str(col)+','+str(month)+','+str(40*coef[0,0])
-
-                     saveFile = open(csvFile, 'a')   # reopen csv file
-                     saveFile.write(saveLine)        # append the saved row
-                     saveFile.close()
                      '''
                      # plot distribution of coefficients onto histogram
                      
@@ -355,12 +348,16 @@ for key in keylist_mx:
                                   '\nClimate Station '+str(key)+', n='+str(sampSize))
                      plt.show()                         # plots each MCA distribution
                      '''
-       placeHolderList.append(placeHolderDf)
+       # add SD and mean to dictCoef dataframes
+       dfStats = pd.DataFrame({'sd': lrcSdList, 'mean': lrcMeanList}) # convert sd/mean lists to df
+       tempDf = tempDf.join(dfStats, how='left')                      # join above df to dictCoef
+       tempDf[['key', 'month']] = tempDf[['key','month']].astype(int) # reset key/month to ints
 
 endTime = datetime.now()
 elapsedTime = endTime - startTime
 print('Execution time:', elapsedTime)
 
+# %%
 # # Set code for iterator
 # marTmax = dict_tmax_cmm_mx[2]['tmax'].tail(40).values.tolist()        # example of target list for while loop
 # #dict_tmax_cmm_mx[2]['tmax'].tail(40).plot()                          # sample of actual plot
