@@ -358,6 +358,18 @@ elapsedTime = endTime - startTime
 print('Execution time:', elapsedTime)
 
 # %%
+for key in keylist_mx:
+       index = 0
+       while index > 48:
+              if 'obs linregCoef > mean + 2*SD':
+                     'return some value'
+              elif 'obs linregCoef < mean - 2*SD':
+                     'return another value'
+              else:
+                     break
+              index += 1
+
+# %%
 # # Set code for iterator
 # marTmax = dict_tmax_cmm_mx[2]['tmax'].tail(40).values.tolist()        # example of target list for while loop
 # #dict_tmax_cmm_mx[2]['tmax'].tail(40).plot()                          # sample of actual plot
