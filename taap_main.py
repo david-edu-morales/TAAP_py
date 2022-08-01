@@ -287,15 +287,16 @@ def monteCarloGenerator(obsValueList):
               currentYear += 1
               
        # Calculate the linear regression
-       selValDict = {'year':tX,'variable':vY}    # merge selectedValue and counter lists into dict
-       selValDf = pd.DataFrame(selValDict)       # convert dictionary into dataframe
+       # merge selectedValue and counter lists into dict
+       selValDf = pd.DataFrame({'year':tX,'variable':vY})       # convert dictionary into dataframe
        selValDf = selValDf.dropna()              # drop NaN-bearing rows from dataframe
 
        x_data = selValDf['year'].values.reshape(selValDf.shape[0],1)   # prep data for linreg
        y_data = selValDf['variable'].values.reshape(selValDf.shape[0],1)
 
        reg = linear_model.LinearRegression().fit(x_data, y_data)
-       coef = reg.coef_     # define linreg trend as coef to be plot and saved in iterator
+       coef = reg.coef_ * listLen  # define linreg trend as coef to be plot and saved in iterator
+                                   # multiply coef by listLen variable for variables w/ < 40 yrs of data
 
 # %%
 # Automate the iterator to run through all station/variable/month MCA distributions
@@ -304,7 +305,6 @@ startTime = datetime.now()
 
 for key in keylist_mx:
        
-       tempDf = dictCoef[key]      # shorten name for readability 
        lrcSdList = []              # reset SD list for each key and append to dictCoef
        lrcMeanList = []            # reset mean list for each key and append to dictCoef
 
@@ -326,7 +326,7 @@ for key in keylist_mx:
                      # iterate Monte Carlo simulator code
                      while counter <= sampSize:  # iterate to chosen sample size
                             monteCarloGenerator(dataset)
-                            linRegCoef.append(40*coef[0,0])
+                            linRegCoef.append(coef[0,0])
                     
                             counter += 1
 
@@ -350,8 +350,8 @@ for key in keylist_mx:
                      '''
        # add SD and mean to dictCoef dataframes
        dfStats = pd.DataFrame({'sd': lrcSdList, 'mean': lrcMeanList}) # convert sd/mean lists to df
-       tempDf = tempDf.join(dfStats, how='left')                      # join above df to dictCoef
-       tempDf[['key', 'month']] = tempDf[['key','month']].astype(int) # reset key/month to ints
+       dictCoef[key] = dictCoef[key].join(dfStats, how='left')        # join above df to dictCoef
+       dictCoef[key][['key', 'month']] = dictCoef[key][['key','month']].astype(int) # reset key/month to ints
 
 endTime = datetime.now()
 elapsedTime = endTime - startTime
