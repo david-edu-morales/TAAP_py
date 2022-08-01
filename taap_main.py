@@ -370,36 +370,3 @@ for key in keylist_mx:
               index += 1
 
 # %%
-# # Set code for iterator
-# marTmax = dict_tmax_cmm_mx[2]['tmax'].tail(40).values.tolist()        # example of target list for while loop
-# #dict_tmax_cmm_mx[2]['tmax'].tail(40).plot()                          # sample of actual plot
-
-# # set variables for iterator
-# sampSize = 100000 # number of iterations for Monte Carlo simulator
-# counter = 1   # counter to keep track of iterated distributions
-# linRegCoef = [] # create list for store linreg coefficients
-
-# # iterate monte carlo simulator code
-# while counter <= sampSize:  # setting the number of iterations to the chosen sample size
-#        monteCarloPrecip(marTmax)
-#        linRegCoef.append(40*coef[0,0])
-#        #plt.show()    # creates separate graphs for each iteration, comment out for one main plot
-       
-#        counter += 1
-
-# # plot distribution of coefficients onto histogram
-# coefSeries = pd.Series(linRegCoef) # convert list of linreg coefficients to series
-# ax = coefSeries.plot.hist(bins=50)
-# ax.set_xlabel(degree_sign+'C/40yr')    
-# ax.set_title('Monte Carlo Analysis of March tmax\nClimate Station 26057, n=' + str(sampSize))
-# # ax.axvline(5.24, color='r') # shows the corresponding linreg coefficient value for 26057/tmax/March
-
-# # get end datetime
-# endTime = datetime.now()
-
-# # get execution time
-# elapsedTime = endTime - startTime
-# print('Execution time:', elapsedTime)
-
-
-# %%
