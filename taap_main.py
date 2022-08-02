@@ -460,11 +460,13 @@ for year in years:
 
 cleanedData = pd.concat(masterList)
 # %%
-dict_mx[26057]['month'] = dict_mx[26057].index.month
-dict_mx[26057]['year'] = dict_mx[26057].index.year
-df = dict_mx[26057]
-df['null_count'] = df.evap.isnull().groupby([df['month'],df['year']]).transform('sum').astype(int)
-df = df[df['null_count'] <= 10]
+for key in keylist_mx:
+       dict_mx[key]['month'] = dict_mx[key].index.month
+       dict_mx[key]['year'] = dict_mx[key].index.year
+       df = dict_mx[key]
+       for col in cols_mx:
+              df['null_count'] = df[col].isnull().groupby([df['month'],df['year']]).transform('sum').astype(int)
+              df = df[df['null_count'] <= 10]
 
 
 #df['consecutive_null'] = df.evap.isnull().astype(int).groupby(df.evap.notnull().astype(int).cumsum()).transform('sum')
@@ -477,18 +479,41 @@ df = df[df.cons_null < 6]
 
 
 # %%
-dict_mx[26057].head()
-
-melt = pd.melt(frame=dict_mx[26057],
-               value_vars=['precip','evap','tmax','tmin'],
-               value_name='measurement',
-               var_name='variable',
-               ignore_index=False)
-
+# Melt the dataframe to arrange one observation per row
 dictMelt = {key: pd.melt(frame=dict_mx[key],
                          value_vars=['precip','evap','tmax','tmin'],
                          value_name='measurement',
                          var_name='variable',
                          ignore_index=False)
                      for key in keylist_mx}
+
+# Count the number of Nan values for each month.
+for key in keylist_mx:
+       df = dictMelt[key]                 # Temporary rename of iterated df
+       df['month'] = df.index.month       # Add month column
+       df['year'] = df.index.year         # Add year column
+       df['null_count'] = df.measurement.isnull().groupby([df['variable'],   # Add null count column
+                                                           df['month'],
+                                                           df['year']]).transform('sum').astype(int)
+
+# Remove months w/ > 10 missing values 
+dictMelt = {key: dictMelt[key][dictMelt[key]['null_count'] <= 10] for key in keylist_mx}
+
+# Remove months w/ > 5 consecutive missing values
+
+# %%
+df = dictMelt[26057]
+df['null_series'] = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
+variableList = []
+
+# %%
+consecutive_null = df.evap.isnull().astype(int).groupby(df.evap.notnull().astype(int).cumsum()).transform('sum').rename('cons_null')
+
+df = df.merge(consecutive_null, left_index=True, right_index=True)
+df = df[df.cons_null < 6]
+
+# for key in keylist_mx:
+#        for col in cols_mx:
+#               null_series = df.evap.isnull().astype(int).groupby(df.evap.notnull().astype(int).cumsum()).transform('sum').rename('cons_null')
+
 # %%
