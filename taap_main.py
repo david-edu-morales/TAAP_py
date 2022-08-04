@@ -507,18 +507,19 @@ for key in keylist_mx:
        df = dictMelt[key]                 # Temporary rename of iterated df
        df['month'] = df.index.month       # Add month column
        df['year'] = df.index.year         # Add year column
-       df['null_count'] = df.measurement.isnull().groupby([df['variable'],   # Add null count column
+       # Count the total number of null values by month/year/variable (for <= 10 values rule)
+       df['null_count'] = df.measurement.isnull().groupby([df['variable'],
                                                            df['month'],
                                                            df['year']]).transform('sum').astype(int)
-       # cons_null = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
-       # df['cons_null'] = cons_null
-       # df['new_null'] = df.cons_null.groupby([df['variable'],
-       #                                        df['month'],
-       #                                        df['year']]).transform('max')  # Add 
-       df['days_of_record'] = df.month.notnull().groupby([df['variable'],    # Add obs count column
+       # Count the number of valid observations by month/year/variable (for <= 10 values rule)
+       #      Some months may have only 15 (for ex.) valid records with no null values. 
+       #      This would escape above filter.
+       df['days_of_record'] = df.month.notnull().groupby([df['variable'],
                                                           df['month'],
                                                           df['year']]).transform('sum').astype(int)
-       df['days_of_month'] = df.apply(lambda row: days_of_month(row), axis=1)       
+       # Add the number of days for each month, sensitive to leap years.
+       df['days_of_month'] = df.apply(lambda row: days_of_month(row), axis=1)
+       #      
        df['min_days_reqd'] = df.days_of_month - 10
        cons_null = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
        df['cons_null'] = cons_null
@@ -530,7 +531,7 @@ for key in keylist_mx:
 dictMelt = {key: dictMelt[key][dictMelt[key]['null_count'] <= 10] for key in keylist_mx}
 
 # Remove months w/ fewer days of record than required minimum
-dictMelt = {key: dictMelt[key][dictMelt[key].days_of_record > 
+dictMelt = {key: dictMelt[key][dictMelt[key].days_of_record + dictMelt[key].null_count > 
                  dictMelt[key].min_days_reqd] for key in keylist_mx}
 
 # Remove months w/ > 5 consecutive missing values
