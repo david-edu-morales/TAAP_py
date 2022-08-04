@@ -539,33 +539,4 @@ dictMelt = {key: dictMelt[key][dictMelt[key].cons_null_max <= 5] for key in keyl
 # Remove unneeded columns
 dictMelt = {key: dictMelt[key][['variable','measurement','month','year']] for key in keylist_mx}
 
-# for key in keylist_mx:
-#        df = dictMelt[key]
-#        cons_null = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
-#        df['cons_null'] = cons_null
-#        df['new_null'] = df.cons_null.groupby([df['variable'],
-#                                                  df['month'],
-#                                                  df['year']]).transform('max')  # Add 
-# %%
-df = dictMelt[26057]
-df = df[['variable','measurement','month','year','null_count']]
-df['null_series'] = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
-variableList = []
-
-# %%
-df = dictMelt[26057]
-df = df[['variable','measurement','month','year','null_count']]
-#consecutive_null = df.evap.isnull().astype(int).groupby(df.evap.notnull().astype(int).cumsum()).transform('sum').rename('cons_null')
-cons_null = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
-
-df = df.assign(cons_null=cons_null)
-
-df['new_null'] = df.cons_null.groupby([df['variable'],df['month'],df['year']]).transform('max')
-# df = pd.merge(df, consecutive_null, how='inner', left_index=True, right_index=True)
-# df = df[df.cons_null < 6]
-
-# for key in keylist_mx:
-#        for col in cols_mx:
-#               null_series = df.evap.isnull().astype(int).groupby(df.evap.notnull().astype(int).cumsum()).transform('sum').rename('cons_null')
-
 # %%
