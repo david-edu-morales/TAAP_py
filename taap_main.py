@@ -488,8 +488,10 @@ dictMelt = {key: pd.melt(frame=dict_mx[key],
                      for key in keylist_mx}
 
 # Identify leap years contained within the data
-leapYear = dictMelt[26057][(dictMelt[26057].index.day == 29) &
-                           (dictMelt[26057].month == 2)].index.year.unique().tolist()
+leapYear = [1932, 1936, 1940, 1944, 1952, 1956, 1960, 1972, 1976,
+            1980, 1984, 1988, 1992, 2000, 2004, 2008, 2012, 2016]
+# dictMelt[26057][(dictMelt[26057].index.day == 29) &
+                           #(dictMelt[26057].month == 2)].index.year.unique().tolist()
 
 # Create function that inputs the number of days in a month to be applied across rows
 def days_of_month(row):
@@ -508,11 +510,21 @@ for key in keylist_mx:
        df['null_count'] = df.measurement.isnull().groupby([df['variable'],   # Add null count column
                                                            df['month'],
                                                            df['year']]).transform('sum').astype(int)
+       # cons_null = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
+       # df['cons_null'] = cons_null
+       # df['new_null'] = df.cons_null.groupby([df['variable'],
+       #                                        df['month'],
+       #                                        df['year']]).transform('max')  # Add 
        df['days_of_record'] = df.month.notnull().groupby([df['variable'],    # Add obs count column
                                                           df['month'],
                                                           df['year']]).transform('sum').astype(int)
        df['days_of_month'] = df.apply(lambda row: days_of_month(row), axis=1)       
        df['min_days_reqd'] = df.days_of_month - 10
+       cons_null = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
+       df['cons_null'] = cons_null
+       df['cons_null_max'] = df.cons_null.groupby([df['variable'],
+                                                 df['month'],
+                                                 df['year']]).transform('max')
 
 # Remove months w/ > 10 missing values 
 dictMelt = {key: dictMelt[key][dictMelt[key]['null_count'] <= 10] for key in keylist_mx}
@@ -522,35 +534,38 @@ dictMelt = {key: dictMelt[key][dictMelt[key].days_of_record >
                  dictMelt[key].min_days_reqd] for key in keylist_mx}
 
 # Remove months w/ > 5 consecutive missing values
+dictMelt = {key: dictMelt[key][dictMelt[key].cons_null_max <= 5] for key in keylist_mx}
 
+# Remove unneeded columns
+dictMelt = {key: dictMelt[key][['variable','measurement','month','year']] for key in keylist_mx}
+
+# for key in keylist_mx:
+#        df = dictMelt[key]
+#        cons_null = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
+#        df['cons_null'] = cons_null
+#        df['new_null'] = df.cons_null.groupby([df['variable'],
+#                                                  df['month'],
+#                                                  df['year']]).transform('max')  # Add 
 # %%
 df = dictMelt[26057]
+df = df[['variable','measurement','month','year','null_count']]
 df['null_series'] = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
 variableList = []
 
 # %%
-consecutive_null = df.evap.isnull().astype(int).groupby(df.evap.notnull().astype(int).cumsum()).transform('sum').rename('cons_null')
+df = dictMelt[26057]
+df = df[['variable','measurement','month','year','null_count']]
+#consecutive_null = df.evap.isnull().astype(int).groupby(df.evap.notnull().astype(int).cumsum()).transform('sum').rename('cons_null')
+cons_null = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
 
-df = df.merge(consecutive_null, left_index=True, right_index=True)
-df = df[df.cons_null < 6]
+df = df.assign(cons_null=cons_null)
+
+df['new_null'] = df.cons_null.groupby([df['variable'],df['month'],df['year']]).transform('max')
+# df = pd.merge(df, consecutive_null, how='inner', left_index=True, right_index=True)
+# df = df[df.cons_null < 6]
 
 # for key in keylist_mx:
 #        for col in cols_mx:
 #               null_series = df.evap.isnull().astype(int).groupby(df.evap.notnull().astype(int).cumsum()).transform('sum').rename('cons_null')
 
 # %%
-leapYear = dictMelt[26057][(dictMelt[26057].index.day == 29) &
-                           (dictMelt[26057].month == 2)].index.year.unique().tolist()
-
-def days_of_month(row):
-       x = row['month']
-       if (row['year'] in leapYear):
-              dayList = [31,29,31,30,31,30,31,31,30,31,30,31]
-       else:
-              dayList = [31,28,31,30,31,30,31,31,30,31,30,31]
-       return dayList[x-1]
-
-dictMelt[26057]['days_of_month'] = dictMelt[26057].apply(lambda row: days_of_month(row), axis=1)
-dictMelt[26057]['min_days_reqd'] = dictMelt[26057].days_of_month - 10
-dictMelt[26057] = dictMelt[26057][dictMelt[26057].days_of_record > dictMelt[26057].min_days_reqd]
-
