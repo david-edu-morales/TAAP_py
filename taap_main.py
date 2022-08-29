@@ -542,33 +542,27 @@ dictMelt = {key: dictMelt[key][['variable','measurement','month','year']] for ke
 
 # %%
 # Determine the monthly averages (Tn, Tx, and ET) and sums (precip) from the climatological data
-resampleTest = dictMelt[26057].groupby(['variable'])[['measurement']].resample('M').mean()    # this results in MultiIndex
-monthlyAvg = dictMelt[26057].groupby(['variable']).resample('M')[['measurement']].mean()    # this results in MultiIndex
-monthlyAvg = monthlyAvg.reset_index(level='variable')
+dictMonthly = {}     # create dictionary to receive for loop outputs
 
-# %%
-# Split precip from other data, work on each grouping separately then recombine
-precip = dictMelt[26057].loc[dictMelt[26057].variable == 'precip']
-precipSum = precip.resample('M')[['measurement']].sum()
-precipSum['variable'] = 'precip'
-precipSum = precipSum[['variable','measurement']]
-# %%
-grouped = dictMelt[26057].groupby('variable')
-precipGB = grouped.get_group('precip').resample('M')[['measurement']].sum()
-# %%
-grouped = dictMelt[26057].groupby('variable')
-monthlyAvg = grouped.resample('M')[['measurement']].mean()    # this results in MultiIndex
-monthlyAvg = monthlyAvg.loc[['evap', 'tmax', 'tmin']]
-monthlyAvg = monthlyAvg.reset_index(level='variable')
+for key in keylist_mx:
+       # First, calculate monthly averages
+       grouped = dictMelt[key].groupby('variable')                    # group data by variable
+       monthlyAvg = grouped.resample('M')[['measurement']].mean()     # calc monthly mean of all variables
+       monthlyAvg = monthlyAvg.loc[['evap', 'tmax', 'tmin']]          # drop the resampled precip data
+       monthlyAvg = monthlyAvg.reset_index(level='variable')          # return multiindex to 'variable' column
 
-monthlySum = grouped.get_group('precip').resample('M')[['measurement']].sum()
-monthlySum['variable'] = 'precip'
-monthlySum = monthlySum[['variable','measurement']]
+       # Second, calculate monthly sums for precip
+       monthlySum = grouped.get_group('precip').resample('M')[['measurement']].sum()
+       monthlySum['variable'] = 'precip'                              # return 'variable' column
+       monthlySum = monthlySum[['variable','measurement']]            # re-order columns
 
-monthlyData = pd.concat([monthlyAvg, monthlySum])
-monthlyData['month'] = monthlyData.index.month
-monthlyData['year'] = monthlyData.index.year
+       # Third, join data and reset 'month' and 'year' columns
+       monthlyData = pd.concat([monthlyAvg, monthlySum])              # combine calc'd avgs and sums
+       monthlyData['month'] = monthlyData.index.month
+       monthlyData['year'] = monthlyData.index.year
 
-
+       # Fourth, create element to append to dictionary
+       data = {key: monthlyData}                                      # temporary element for update
+       dictMonthly.update(data)                                       # append element to dictionary
 
 # %%
