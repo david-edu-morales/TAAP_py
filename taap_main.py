@@ -348,10 +348,6 @@ for col in cols_us:
        plt.savefig('22140_'+col+'-mm')
 
 # %%
-day_list = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] # "normal" year distro
-ly_list = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] # leap-year distro
-
-# %%
 # Monte Carlo function to generate randomized sample of observed values for given timeframe.
 def monteCarloGenerator(obsValueList):
        global coef   # linear regression variable will be added to list in iterator
@@ -389,14 +385,15 @@ startTime = datetime.now()
 
 for key in keylist_mx:
        
+       df = dictMonthly[key]       # Set object name for ease of reading
        lrcSdList = []              # reset SD list for each key and append to dictCoef
        lrcMeanList = []            # reset mean list for each key and append to dictCoef
 
-       for col in cols_mx:
+       for var in vars_mx:
 
               for month in range(1,13):
                      # Select data from observed record for the iterator
-                     dataset = dict_mm_mx[key][dict_mm_mx[key]['month']==month]\
+                     dataset = df[df.index.month['month']==month]\
                                [col].tail(40).values.tolist()
 
                      # Select observed linreg coef to plot on MCA distribution
