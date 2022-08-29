@@ -57,51 +57,135 @@ for key in keylist_mx:
        dict_mx[key] = dict_mx[key].astype(float)                             # correct datatypes
 
 # %%
-# Resample data to a monthly mean
-dict_mm_mx = {key: dict_mx[key][cols_mx].resample('M').mean() for key in keylist_mx}
+# Melt the dataframe to arrange one observation per row
+dictMelt = {key: pd.melt(frame=dict_mx[key],
+                         value_vars=['precip','evap','tmax','tmin'],
+                         value_name='measurement',
+                         var_name='variable',
+                         ignore_index=False)
+                     for key in keylist_mx}
 
-# Add year and month columns for each monthly mean to make graphing simpler
+# Identify leap years contained within the data
+leapYear = [1932, 1936, 1940, 1944, 1952, 1956, 1960, 1972, 1976,
+            1980, 1984, 1988, 1992, 2000, 2004, 2008, 2012, 2016]
+# dictMelt[26057][(dictMelt[26057].index.day == 29) &
+                           #(dictMelt[26057].month == 2)].index.year.unique().tolist()
+
+# Create function that inputs the number of days in a month to be applied across rows
+def days_of_month(row):
+       x = row['month']
+       if (row['year'] in leapYear):
+              dayList = [31,29,31,30,31,30,31,31,30,31,30,31]
+       else:
+              dayList = [31,28,31,30,31,30,31,31,30,31,30,31]
+       return dayList[x-1]
+
+# Count the number of Nan values for each month.
 for key in keylist_mx:
-       dict_mm_mx[key]['year'] = dict_mm_mx[key].index.year
-       dict_mm_mx[key]['month'] = dict_mm_mx[key].index.month
+       df = dictMelt[key]                 # Temporary rename of iterated df
+       df['month'] = df.index.month       # Add month column
+       df['year'] = df.index.year         # Add year column
+       # Count the total number of null values by month/year/variable (for <= 10 values rule)
+       df['null_count'] = df.measurement.isnull().groupby([df['variable'],
+                                                           df['month'],
+                                                           df['year']]).transform('sum').astype(int)
+       # Count the number of valid observations by month/year/variable (for <= 10 values rule)
+       #      Some months may have only 15 (for ex.) valid records with no null values. 
+       #      This would escape above filter.
+       df['days_of_record'] = df.month.notnull().groupby([df['variable'],
+                                                          df['month'],
+                                                          df['year']]).transform('sum').astype(int)
+       # Add the number of days for each month, sensitive to leap years.
+       df['days_of_month'] = df.apply(lambda row: days_of_month(row), axis=1)
+       #      
+       df['min_days_reqd'] = df.days_of_month - 10
+       cons_null = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
+       df['cons_null'] = cons_null
+       df['cons_null_max'] = df.cons_null.groupby([df['variable'],
+                                                 df['month'],
+                                                 df['year']]).transform('max')
+
+# Remove months w/ > 10 missing values 
+dictMelt = {key: dictMelt[key][dictMelt[key]['null_count'] <= 10] for key in keylist_mx}
+
+# Remove months w/ fewer days of record than required minimum
+dictMelt = {key: dictMelt[key][dictMelt[key].days_of_record + dictMelt[key].null_count > 
+                 dictMelt[key].min_days_reqd] for key in keylist_mx}
+
+# Remove months w/ > 5 consecutive missing values
+dictMelt = {key: dictMelt[key][dictMelt[key].cons_null_max <= 5] for key in keylist_mx}
+
+# Remove unneeded columns
+dictMelt = {key: dictMelt[key][['variable','measurement','month','year']] for key in keylist_mx}
 
 # %%
-# Automate 12-plot monthly mean plot for variables
-# Set up csv file to record linear regression trends
+# Determine the monthly averages (Tn, Tx, and ET) and sums (precip) from the climatological data
+dictMonthly = {}     # create dictionary to receive for loop outputs
+
+for key in keylist_mx:
+       # First, calculate monthly averages
+       grouped = dictMelt[key].groupby('variable')                    # group data by variable
+       monthlyAvg = grouped.resample('M')[['measurement']].mean()     # calc monthly mean of all variables
+       monthlyAvg = monthlyAvg.loc[['evap', 'tmax', 'tmin']]          # drop the resampled precip data
+       monthlyAvg = monthlyAvg.reset_index(level='variable')          # return multiindex to 'variable' column
+
+       # Second, calculate monthly sums for precip
+       monthlySum = grouped.get_group('precip').resample('M')[['measurement']].sum()
+       monthlySum['variable'] = 'precip'                              # return 'variable' column
+       monthlySum = monthlySum[['variable','measurement']]            # re-order columns
+
+       # Third, join data and reset 'month' and 'year' columns
+       monthlyData = pd.concat([monthlyAvg, monthlySum])              # combine calc'd avgs and sums
+       monthlyData['month'] = monthlyData.index.month
+       monthlyData['year'] = monthlyData.index.year
+
+       # Fourth, create element to append to dictionary
+       data = {key: monthlyData}                                      # temporary element for update
+       dictMonthly.update(data)                                       # append element to dictionary
+
+# %%
+# Re-create the 12-month plots for each station/variable using the quality-controlled data
+
 with open(csvFile, 'w') as file:       # set mode to write w/ truncation
        dw = csv.DictWriter(file, delimiter=',',
                            fieldnames=headerList)
-       dw.writeheader()                                        # add headers to csv
-
+       dw.writeheader()
 # Set up data & variables
 start, end = 1976, 2016 # set time frame to last forty years
 
 for key in keylist_mx:
+       df = dictMonthly[key]       # rename working database for ease of reading      
 
-       for col in cols_mx:
+       for var in vars_mx:
 
               fig = plt.figure(figsize=(24,16))
               fig.subplots_adjust(hspace=0.2, wspace=0.2)
-              fig.suptitle("Monthly Mean for "+col+"\nClimate Station "+str(key), fontsize=30)
+
+              # Var-dependent figure title
+              if var == vars_mx[0]:
+                     fig.suptitle("Monthly Sum for "+var+"\nClimate Station "+str(key), fontsize=30)
+              else:
+                     fig.suptitle("Monthly Mean for "+var+"\nClimate Station "+str(key), fontsize=30)
               
               for month in range(1,13):
                      ax = fig.add_subplot(3,4,month)    # creates a 12-plot fig (3r x 4c)
 
                      # select data to plot
-                     x = dict_mm_mx[key][dict_mm_mx[key].index.month == month].tail(40).index.year
-                     y = dict_mm_mx[key][dict_mm_mx[key].index.month == month][col].tail(40)
+                     x = df[(df.index.month == month) & (df.variable == var)].tail(40).index.year
+                     y = df[(df.index.month == month) & (df.variable == var)].measurement.tail(40)
 
                      ax.plot(x,y)  # this plots the col values
 
-                     # Col-alike subplot formatting              
+                     # Var-alike subplot formatting              
                      ax.set_title(month_str[month-1], fontsize=20, fontweight='bold')
 
                      # Make the linear regression
-                     database = dict_mm_mx[key].loc[dict_mm_mx[key]['month']==month][[col,'year']].tail(40)
+                     database = df[(df.index.month==month) & (df.variable==var)][['measurement','year']].tail(40)
                      database = database.dropna()
 
+                     # Reshape data for use in LinReg builder
                      x_data = database['year'].values.reshape(database.shape[0],1)
-                     y_data = database[col].values.reshape(database.shape[0],1)
+                     y_data = database['measurement'].values.reshape(database.shape[0],1)
 
                      reg = linear_model.LinearRegression().fit(x_data, y_data)
                      coef = reg.coef_
@@ -111,21 +195,21 @@ for key in keylist_mx:
                      ax.plot(x_data,y_estimate) # this plots the linear regression
 
                      # Save the observed trends to a csv to be plotted on monte carlo distribution
-                     saveLine = '\n'+str(key)+','+str(col)+','+str(month)+','+str(40*coef[0,0])
+                     saveLine = '\n'+str(key)+','+str(var)+','+str(month)+','+str(40*coef[0,0])
 
                      saveFile = open(csvFile, 'a')   # reopen csv file
                      saveFile.write(saveLine)        # append the saved row
                      saveFile.close()
 
-                     # Col-dependent subplot formatting
-                     if col == cols_mx[0]:
+                     # Var-dependent subplot formatting
+                     if var == vars_mx[0]:
                             ax.set_ylabel('mm')
                             ax.text(.1, .8,
                                    str(round((end-start)*coef[0,0],2))+'mm/40yr',
                                    transform=ax.transAxes,
                                    fontsize=24,
                                    color='red')
-                     elif col == cols_mx[1]: # cannot figure out how to combine cols_mx[0:2]
+                     elif var == vars_mx[1]: # cannot figure out how to combine cols_mx[0:2]
                             ax.set_ylabel('mm')
                             ax.text(.1, .8,
                                    str(round((end-start)*coef[0,0],2))+'mm/40yr',
@@ -144,7 +228,9 @@ for key in keylist_mx:
 
 # %%
 # Return recorded coefficients into dictionary
-dfCoef = pd.read_csv(csvFileMx, delimiter=',', usecols=headerList)
+#dfCoef = pd.read_csv(csvFileMx, delimiter=',', usecols=headerList)
+dfCoef = pd.read_csv(csvFile, delimiter=',', usecols=headerList)
+
 dictCoef = {key: dfCoef[dfCoef['key'] == key] for key in keylist_mx}
 
 # Reset index for each dataframe to make appending easier
@@ -371,164 +457,3 @@ for key in keylist_mx:
               index += 1
 
 # %%
-# Melt the dataframe to arrange one observation per row
-dictMelt = {key: pd.melt(frame=dict_mx[key],
-                         value_vars=['precip','evap','tmax','tmin'],
-                         value_name='measurement',
-                         var_name='variable',
-                         ignore_index=False)
-                     for key in keylist_mx}
-
-# Identify leap years contained within the data
-leapYear = [1932, 1936, 1940, 1944, 1952, 1956, 1960, 1972, 1976,
-            1980, 1984, 1988, 1992, 2000, 2004, 2008, 2012, 2016]
-# dictMelt[26057][(dictMelt[26057].index.day == 29) &
-                           #(dictMelt[26057].month == 2)].index.year.unique().tolist()
-
-# Create function that inputs the number of days in a month to be applied across rows
-def days_of_month(row):
-       x = row['month']
-       if (row['year'] in leapYear):
-              dayList = [31,29,31,30,31,30,31,31,30,31,30,31]
-       else:
-              dayList = [31,28,31,30,31,30,31,31,30,31,30,31]
-       return dayList[x-1]
-
-# Count the number of Nan values for each month.
-for key in keylist_mx:
-       df = dictMelt[key]                 # Temporary rename of iterated df
-       df['month'] = df.index.month       # Add month column
-       df['year'] = df.index.year         # Add year column
-       # Count the total number of null values by month/year/variable (for <= 10 values rule)
-       df['null_count'] = df.measurement.isnull().groupby([df['variable'],
-                                                           df['month'],
-                                                           df['year']]).transform('sum').astype(int)
-       # Count the number of valid observations by month/year/variable (for <= 10 values rule)
-       #      Some months may have only 15 (for ex.) valid records with no null values. 
-       #      This would escape above filter.
-       df['days_of_record'] = df.month.notnull().groupby([df['variable'],
-                                                          df['month'],
-                                                          df['year']]).transform('sum').astype(int)
-       # Add the number of days for each month, sensitive to leap years.
-       df['days_of_month'] = df.apply(lambda row: days_of_month(row), axis=1)
-       #      
-       df['min_days_reqd'] = df.days_of_month - 10
-       cons_null = df.measurement.isnull().astype(int).groupby(df.measurement.notnull().astype(int).cumsum()).transform('sum')
-       df['cons_null'] = cons_null
-       df['cons_null_max'] = df.cons_null.groupby([df['variable'],
-                                                 df['month'],
-                                                 df['year']]).transform('max')
-
-# Remove months w/ > 10 missing values 
-dictMelt = {key: dictMelt[key][dictMelt[key]['null_count'] <= 10] for key in keylist_mx}
-
-# Remove months w/ fewer days of record than required minimum
-dictMelt = {key: dictMelt[key][dictMelt[key].days_of_record + dictMelt[key].null_count > 
-                 dictMelt[key].min_days_reqd] for key in keylist_mx}
-
-# Remove months w/ > 5 consecutive missing values
-dictMelt = {key: dictMelt[key][dictMelt[key].cons_null_max <= 5] for key in keylist_mx}
-
-# Remove unneeded columns
-dictMelt = {key: dictMelt[key][['variable','measurement','month','year']] for key in keylist_mx}
-
-# %%
-# Determine the monthly averages (Tn, Tx, and ET) and sums (precip) from the climatological data
-dictMonthly = {}     # create dictionary to receive for loop outputs
-
-for key in keylist_mx:
-       # First, calculate monthly averages
-       grouped = dictMelt[key].groupby('variable')                    # group data by variable
-       monthlyAvg = grouped.resample('M')[['measurement']].mean()     # calc monthly mean of all variables
-       monthlyAvg = monthlyAvg.loc[['evap', 'tmax', 'tmin']]          # drop the resampled precip data
-       monthlyAvg = monthlyAvg.reset_index(level='variable')          # return multiindex to 'variable' column
-
-       # Second, calculate monthly sums for precip
-       monthlySum = grouped.get_group('precip').resample('M')[['measurement']].sum()
-       monthlySum['variable'] = 'precip'                              # return 'variable' column
-       monthlySum = monthlySum[['variable','measurement']]            # re-order columns
-
-       # Third, join data and reset 'month' and 'year' columns
-       monthlyData = pd.concat([monthlyAvg, monthlySum])              # combine calc'd avgs and sums
-       monthlyData['month'] = monthlyData.index.month
-       monthlyData['year'] = monthlyData.index.year
-
-       # Fourth, create element to append to dictionary
-       data = {key: monthlyData}                                      # temporary element for update
-       dictMonthly.update(data)                                       # append element to dictionary
-
-# %%
-# Re-create the 12-month plots for each station/variable using the quality-controlled data
-# Set up data & variables
-start, end = 1976, 2016 # set time frame to last forty years
-
-for key in keylist_mx:
-       df = dictMonthly[key]       # rename working database for ease of reading      
-
-       for var in vars_mx:
-
-              fig = plt.figure(figsize=(24,16))
-              fig.subplots_adjust(hspace=0.2, wspace=0.2)
-
-              # Var-dependent figure title
-              if var == vars_mx[0]:
-                     fig.suptitle("Monthly Sum for "+var+"\nClimate Station "+str(key), fontsize=30)
-              else:
-                     fig.suptitle("Monthly Mean for "+var+"\nClimate Station "+str(key), fontsize=30)
-              
-              for month in range(1,13):
-                     ax = fig.add_subplot(3,4,month)    # creates a 12-plot fig (3r x 4c)
-
-                     # select data to plot
-                     x = df[(df.index.month == month) & (df.variable == var)].tail(40).index.year
-                     y = df[(df.index.month == month) & (df.variable == var)].measurement.tail(40)
-
-                     ax.plot(x,y)  # this plots the col values
-
-                     # Var-alike subplot formatting              
-                     ax.set_title(month_str[month-1], fontsize=20, fontweight='bold')
-
-                     # Make the linear regression
-                     database = df[(df.index.month==month) & (df.variable==var)][['measurement','year']].tail(40)
-                     database = database.dropna()
-
-                     # Reshape data for use in LinReg builder
-                     x_data = database['year'].values.reshape(database.shape[0],1)
-                     y_data = database['measurement'].values.reshape(database.shape[0],1)
-
-                     reg = linear_model.LinearRegression().fit(x_data, y_data)
-                     coef = reg.coef_
-                     inter= reg.intercept_
-                     y_estimate = coef*x_data+inter # y=mx+b, possible option to upgrade
-
-                     ax.plot(x_data,y_estimate) # this plots the linear regression
-
-                     # Save the observed trends to a csv to be plotted on monte carlo distribution
-                     saveLine = '\n'+str(key)+','+str(var)+','+str(month)+','+str(40*coef[0,0])
-
-                     saveFile = open(csvFile, 'a')   # reopen csv file
-                     saveFile.write(saveLine)        # append the saved row
-                     saveFile.close()
-
-                     # Var-dependent subplot formatting
-                     if var == vars_mx[0]:
-                            ax.set_ylabel('mm')
-                            ax.text(.1, .8,
-                                   str(round((end-start)*coef[0,0],2))+'mm/40yr',
-                                   transform=ax.transAxes,
-                                   fontsize=24,
-                                   color='red')
-                     elif var == vars_mx[1]: # cannot figure out how to combine cols_mx[0:2]
-                            ax.set_ylabel('mm')
-                            ax.text(.1, .8,
-                                   str(round((end-start)*coef[0,0],2))+'mm/40yr',
-                                   transform=ax.transAxes,
-                                   fontsize=24,
-                                   color='red')
-                     else:
-                            ax.set_ylabel(degree_sign+'C')
-                            ax.text(.1, .8,
-                                   str(round((end-start)*coef[0,0],2))+degree_sign+'C/40yr',
-                                   transform=ax.transAxes,
-                                   fontsize=24,
-                                   color='red')
