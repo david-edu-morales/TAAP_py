@@ -541,3 +541,34 @@ dictMelt = {key: dictMelt[key][dictMelt[key].cons_null_max <= 5] for key in keyl
 dictMelt = {key: dictMelt[key][['variable','measurement','month','year']] for key in keylist_mx}
 
 # %%
+# Determine the monthly averages (Tn, Tx, and ET) and sums (precip) from the climatological data
+resampleTest = dictMelt[26057].groupby(['variable'])[['measurement']].resample('M').mean()    # this results in MultiIndex
+monthlyAvg = dictMelt[26057].groupby(['variable']).resample('M')[['measurement']].mean()    # this results in MultiIndex
+monthlyAvg = monthlyAvg.reset_index(level='variable')
+
+# %%
+# Split precip from other data, work on each grouping separately then recombine
+precip = dictMelt[26057].loc[dictMelt[26057].variable == 'precip']
+precipSum = precip.resample('M')[['measurement']].sum()
+precipSum['variable'] = 'precip'
+precipSum = precipSum[['variable','measurement']]
+# %%
+grouped = dictMelt[26057].groupby('variable')
+precipGB = grouped.get_group('precip').resample('M')[['measurement']].sum()
+# %%
+grouped = dictMelt[26057].groupby('variable')
+monthlyAvg = grouped.resample('M')[['measurement']].mean()    # this results in MultiIndex
+monthlyAvg = monthlyAvg.loc[['evap', 'tmax', 'tmin']]
+monthlyAvg = monthlyAvg.reset_index(level='variable')
+
+monthlySum = grouped.get_group('precip').resample('M')[['measurement']].sum()
+monthlySum['variable'] = 'precip'
+monthlySum = monthlySum[['variable','measurement']]
+
+monthlyData = pd.concat([monthlyAvg, monthlySum])
+monthlyData['month'] = monthlyData.index.month
+monthlyData['year'] = monthlyData.index.year
+
+
+
+# %%
