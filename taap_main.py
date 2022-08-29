@@ -17,10 +17,8 @@ import os
 # %%
 # Set up variables
 keylist_mx = [26013, 26057, 26164]                      # create list of climate station keys
-cols_mx = ['precip', 'evap', 'tmax', 'tmin']            # specifiy columns to be resampled
 vars_mx = ['precip', 'evap', 'tmax', 'tmin']            # specifiy variables to be resampled
 csvFile = 'climateStationTrends_taap.csv'               # csv filename to collect linRegCoefs
-csvFileMx = 'climateStationTrends_taap_mx.csv'
 headerList = ['key', 'variable', 'month', 'coef']       # header names for csv of linRegCoefs
 month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun',\
              'Jul','Aug','Sep','Oct','Nov','Dec']       # setup month names for graph
@@ -145,11 +143,12 @@ for key in keylist_mx:
 
 # %%
 # Re-create the 12-month plots for each station/variable using the quality-controlled data
-
+'''
 with open(csvFile, 'w') as file:       # set mode to write w/ truncation
        dw = csv.DictWriter(file, delimiter=',',
                            fieldnames=headerList)
        dw.writeheader()
+'''
 # Set up data & variables
 start, end = 1976, 2016 # set time frame to last forty years
 
@@ -193,14 +192,14 @@ for key in keylist_mx:
                      y_estimate = coef*x_data+inter # y=mx+b, possible option to upgrade
 
                      ax.plot(x_data,y_estimate) # this plots the linear regression
-
+                     '''
                      # Save the observed trends to a csv to be plotted on monte carlo distribution
                      saveLine = '\n'+str(key)+','+str(var)+','+str(month)+','+str(40*coef[0,0])
 
                      saveFile = open(csvFile, 'a')   # reopen csv file
                      saveFile.write(saveLine)        # append the saved row
                      saveFile.close()
-
+                     '''
                      # Var-dependent subplot formatting
                      if var == vars_mx[0]:
                             ax.set_ylabel('mm')
@@ -228,9 +227,7 @@ for key in keylist_mx:
 
 # %%
 # Return recorded coefficients into dictionary
-#dfCoef = pd.read_csv(csvFileMx, delimiter=',', usecols=headerList)
 dfCoef = pd.read_csv(csvFile, delimiter=',', usecols=headerList)
-
 dictCoef = {key: dfCoef[dfCoef['key'] == key] for key in keylist_mx}
 
 # Reset index for each dataframe to make appending easier
