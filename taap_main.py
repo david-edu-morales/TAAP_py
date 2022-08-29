@@ -572,13 +572,14 @@ for key in keylist_mx:
 start, end = 1976, 2016 # set time frame to last forty years
 
 for key in keylist_mx:
-       df = dictMonthly[key]
+       df = dictMonthly[key]       # rename working database for ease of reading      
 
        for var in vars_mx:
 
               fig = plt.figure(figsize=(24,16))
               fig.subplots_adjust(hspace=0.2, wspace=0.2)
-              
+
+              # Var-dependent figure title
               if var == vars_mx[0]:
                      fig.suptitle("Monthly Sum for "+var+"\nClimate Station "+str(key), fontsize=30)
               else:
@@ -588,21 +589,19 @@ for key in keylist_mx:
                      ax = fig.add_subplot(3,4,month)    # creates a 12-plot fig (3r x 4c)
 
                      # select data to plot
-                     # x = dict_mm_mx[key][dict_mm_mx[key].index.month == month].tail(40).index.year
                      x = df[(df.index.month == month) & (df.variable == var)].tail(40).index.year
-                     # y = dict_mm_mx[key][dict_mm_mx[key].index.month == month][col].tail(40)
                      y = df[(df.index.month == month) & (df.variable == var)].measurement.tail(40)
 
                      ax.plot(x,y)  # this plots the col values
 
-                     # Col-alike subplot formatting              
+                     # Var-alike subplot formatting              
                      ax.set_title(month_str[month-1], fontsize=20, fontweight='bold')
 
                      # Make the linear regression
-                     # database = dict_mm_mx[key].loc[dict_mm_mx[key]['month']==month][[col,'year']].tail(40)
                      database = df[(df.index.month==month) & (df.variable==var)][['measurement','year']].tail(40)
                      database = database.dropna()
 
+                     # Reshape data for use in LinReg builder
                      x_data = database['year'].values.reshape(database.shape[0],1)
                      y_data = database['measurement'].values.reshape(database.shape[0],1)
 
@@ -620,7 +619,7 @@ for key in keylist_mx:
                      saveFile.write(saveLine)        # append the saved row
                      saveFile.close()
 
-                     # Col-dependent subplot formatting
+                     # Var-dependent subplot formatting
                      if var == vars_mx[0]:
                             ax.set_ylabel('mm')
                             ax.text(.1, .8,
@@ -642,56 +641,3 @@ for key in keylist_mx:
                                    transform=ax.transAxes,
                                    fontsize=24,
                                    color='red')
-
-# %%
-# proving grounds for above code
-for key in keylist_mx:
-       df = dictMonthly[key]
-
-       for var in vars_mx:
-
-              fig = plt.figure(figsize=(24,16))
-              fig.subplots_adjust(hspace=0.2, wspace=0.2)
-              fig.suptitle("Monthly Mean for "+var+"\nClimate Station "+str(key), fontsize=30)
-              
-              for month in range(1,13):
-                     ax = fig.add_subplot(3,4,month)    # creates a 12-plot fig (3r x 4c)
-
-                     # select data to plot
-                     # x = dict_mm_mx[key][dict_mm_mx[key].index.month == month].tail(40).index.year
-                     x = df[(df.index.month == month) & (df.variable == var)].tail(40).index.year
-                     # y = dict_mm_mx[key][dict_mm_mx[key].index.month == month][col].tail(40)
-                     y = df[(df.index.month == month) & (df.variable == var)].measurement.tail(40)
-                     
-                     ax.plot(x,y)  # this plots the col values
-
-                     # Col-alike subplot formatting              
-                     ax.set_title(month_str[month-1], fontsize=20, fontweight='bold')
-
-                     # Make the linear regression
-                     # database = dict_mm_mx[key].loc[dict_mm_mx[key]['month']==month][[col,'year']].tail(40)
-                     database = df[(df.index.month==month) & (df.variable==var)][['measurement','year']].tail(40)
-                     database = database.dropna()
-
-                     x_data = database['year'].values.reshape(database.shape[0],1)
-                     y_data = database['measurement'].values.reshape(database.shape[0],1)
-
-                     reg = linear_model.LinearRegression().fit(x_data, y_data)
-                     coef = reg.coef_
-                     inter= reg.intercept_
-                     y_estimate = coef*x_data+inter # y=mx+b, possible option to upgrade
-
-                     ax.plot(x_data,y_estimate) # this plots the linear regression
-# %%
-key = 26013
-month = 1
-var = 'precip'
-
-df = dictMonthly[key]
-
-x = df[(df.index.month == month) & (df.variable == var)].tail(40).index.year
-# y = dict_mm_mx[key][dict_mm_mx[key].index.month == month][col].tail(40)
-y = df[(df.index.month == month) & (df.variable == var)].measurement.tail(40)
-
-janMonthly = df[df.index.month == month]
-# %%
