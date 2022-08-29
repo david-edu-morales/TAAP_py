@@ -498,17 +498,17 @@ for key in keylist_mx:
                      lrcSdList.append(lrcSD)                                 # append SD to list
                      lrcMeanList.append(lrcMean)                             # append mean to list
 
-                     '''
+                     
                      # plot distribution of coefficients onto histogram
                      
                      ax = coefSeries.plot.hist(bins=50) # generate histogram of linregCoef
                      ax.axvline(obsCoef, color='r')     # plots corresponding linregCoef
-                     ax.set_xlabel(col)
+                     ax.set_xlabel(var)
                      ax.set_ylabel('Count')
-                     ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+col+\
+                     ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+var+\
                                   '\nClimate Station '+str(key)+', n='+str(sampSize))
                      plt.show()                         # plots each MCA distribution
-                     '''
+                     
        # add SD and mean to dictCoef dataframes
        dfStats = pd.DataFrame({'sd': lrcSdList, 'mean': lrcMeanList}) # convert sd/mean lists to df
        dictCoef[key] = dictCoef[key].join(dfStats, how='left')        # join above df to dictCoef
