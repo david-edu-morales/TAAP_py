@@ -235,6 +235,141 @@ for key in keylist_mx:
        dictCoef[key].reset_index(drop=True, inplace=True)
 
 # %%
+# Monte Carlo function to generate randomized sample of observed values for given timeframe.
+def monteCarloGenerator(obsValueList):
+       global coef   # linear regression variable will be added to list in iterator
+
+       tX = [] # list to collect count of years for x-axis
+       vY = [] # list to collect randomized observed values for y-axis
+
+       currentYear = 1                    # counter to keep track of years
+       listLen = len(obsValueList)        # create limit of rolls and range of position values
+                                          # not all station/variable/month datasets are same size
+       while currentYear <= listLen:
+              roll = randint(0,(listLen-1))             # generate random index place value
+              selectedValue = obsValueList[roll]       # select corresponding precip value from list
+              tX.append(currentYear)                    # add year value to list
+              vY.append(selectedValue)                 # add precip value to list
+
+              currentYear += 1
+              
+       # Calculate the linear regression
+       # merge selectedValue and counter lists into dict
+       selValDf = pd.DataFrame({'year':tX,'variable':vY})       # convert dictionary into dataframe
+       selValDf = selValDf.dropna()              # drop NaN-bearing rows from dataframe
+
+       x_data = selValDf['year'].values.reshape(selValDf.shape[0],1)   # prep data for linreg
+       y_data = selValDf['variable'].values.reshape(selValDf.shape[0],1)
+
+       reg = linear_model.LinearRegression().fit(x_data, y_data)
+       coef = reg.coef_ * listLen  # define linreg trend as coef to be plot and saved in iterator
+                                   # multiply coef by listLen variable for variables w/ < 40 yrs of data
+
+# %%
+# Automate the iterator to run through all station/variable/month MCA distributions
+# get start datetime
+startTime = datetime.now()
+
+# keylist_mx = [26057]      # test values to play with plot output
+# vars_mx = ['tmax']
+
+for key in keylist_mx:
+       
+       df = dictMonthly[key]       # Set object name for ease of reading
+       lrcSdList = []              # reset SD list for each key and append to dictCoef
+       lrcMeanList = []            # reset mean list for each key and append to dictCoef
+
+       for var in vars_mx:
+
+              for month in range(1,13):
+              #for month in range(1,2):
+                     # Select data from observed record for the iterator
+                     dataset = df[(df.index.month==month) &\
+                                  (df.variable==var)].measurement.tail(40).values.tolist()
+
+                     # Select observed linreg coef to plot on MCA distribution
+                     obsCoef = dictCoef[key][(dictCoef[key].variable==var) &\
+                                             (dictCoef[key]['month']==month)]['coef'].values[0]
+
+                     sampSize = 10000     # number of iterations for MCA
+                     counter = 1          # counter to keep track of iterated distributions
+                     linRegCoef = []      # create list for storing generated linreg coefs
+
+                     # iterate Monte Carlo simulator code
+                     while counter <= sampSize:  # iterate to chosen sample size
+                            monteCarloGenerator(dataset)
+                            linRegCoef.append(coef[0,0])
+                    
+                            counter += 1
+
+                     # collect information about generated linreg statistics (SD and mean)
+                     coefSeries = pd.Series(linRegCoef)                      # linregCoef to Series
+                     lrcSD, lrcMean = coefSeries.std(), coefSeries.mean()    # define SD and mean
+
+                     lrcSdList.append(lrcSD)                                 # append SD to list
+                     lrcMeanList.append(lrcMean)                             # append mean to list
+
+                     # calculate percent chance of generating observed trend, or higher
+                     chanceCount = 0
+
+                     for i in range(len(coefSeries)):
+                            if obsCoef < 0:                    # for (-) historical trends
+                                   if obsCoef > coefSeries[i]:
+                                          chanceCount += 1
+                            else:                              # for (+) historical trends
+                                   if obsCoef < coefSeries[i]:
+                                          chanceCount += 1
+
+                     percentChance = chanceCount/len(coefSeries)*100
+
+                     # plot distribution of coefficients onto histogram
+                     ax = coefSeries.plot.hist(bins=50, label='_nolegend_') # generate histogram of linregCoef
+                     ax.axvline(obsCoef, color='r', label='historical trend')     # plots corresponding linregCoef
+
+                     if var == vars_mx[0]:
+                            textstr = '\n'.join((
+                                   r'historical trend = %.2f%s' % (obsCoef, 'mm/40yr'),
+                                   r'MC-generation chance = %.2f%s' % (percentChance, '%'),
+                                   r'$\sigma=%.2f$' % (lrcSD, )))
+                     elif var == vars_mx[1]:
+                            textstr = '\n'.join((
+                                   r'historical trend = %.2f' % (obsCoef, 'mm/40yr'),
+                                   r'MC-generation chance = %.2f%s' % (percentChance, '%'),
+                                   r'$\sigma=%.2f$' % (lrcSD, )))
+                     else:
+                            textstr = '\n'.join((
+                                   r'historical trend = %.2f' % (obsCoef, degree_sign+'C/40yr'),
+                                   r'MC-generation chance = %.2f%s' % (percentChance, '%'),
+                                   r'$\sigma=%.2f$' % (lrcSD, )))
+
+                     props = dict(boxstyle='round', facecolor='lightsteelblue', alpha=0.5)
+
+                     # place a text box in upper left in axes coords
+                     ax.text(0.05, 0.92, textstr, transform=ax.transAxes, fontsize=12,
+                            verticalalignment='top', bbox=props)
+                     # ax.text((obsCoef), 40,
+                     #               str(round(obsCoef,2))+'mm/40yr',
+                     #               #transform=ax.transAxes,
+                     #               fontsize=16,
+                     #               color='red',
+                     #               horizontalalignment='center')
+                     ax.set_xlabel(var)
+                     ax.set_ylabel('Count')
+                     ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+var+\
+                                  '\nClimate Station '+str(key)+', n='+str(sampSize), fontsize=12)
+                     plt.legend(loc='upper right')
+                     plt.show()                         # plots each MCA distribution
+                     plt.savefig('mcaPlots/'+str(key)+'-'+var+'-'+month_str[month-1]+'_mca')
+                     
+       # add SD and mean to dictCoef dataframes
+       dfStats = pd.DataFrame({'sd': lrcSdList, 'mean': lrcMeanList}) # convert sd/mean lists to df
+       dictCoef[key] = dictCoef[key].join(dfStats, how='left')        # join above df to dictCoef
+       dictCoef[key][['key', 'month']] = dictCoef[key][['key','month']].astype(int) # reset key/month to ints
+
+endTime = datetime.now()
+elapsedTime = endTime - startTime
+print('Execution time:', elapsedTime)
+# %%
 # *** US CLIMATE STATIONS ***
 
 # Read the files into a df and clean the data
@@ -347,96 +482,6 @@ for col in cols_us:
 
        plt.savefig('22140_'+col+'-mm')
 
-# %%
-# Monte Carlo function to generate randomized sample of observed values for given timeframe.
-def monteCarloGenerator(obsValueList):
-       global coef   # linear regression variable will be added to list in iterator
-
-       tX = [] # list to collect count of years for x-axis
-       vY = [] # list to collect randomized observed values for y-axis
-
-       currentYear = 1                    # counter to keep track of years
-       listLen = len(obsValueList)        # create limit of rolls and range of position values
-                                          # not all station/variable/month datasets are same size
-       while currentYear <= listLen:
-              roll = randint(0,(listLen-1))             # generate random index place value
-              selectedValue = obsValueList[roll]       # select corresponding precip value from list
-              tX.append(currentYear)                    # add year value to list
-              vY.append(selectedValue)                 # add precip value to list
-
-              currentYear += 1
-              
-       # Calculate the linear regression
-       # merge selectedValue and counter lists into dict
-       selValDf = pd.DataFrame({'year':tX,'variable':vY})       # convert dictionary into dataframe
-       selValDf = selValDf.dropna()              # drop NaN-bearing rows from dataframe
-
-       x_data = selValDf['year'].values.reshape(selValDf.shape[0],1)   # prep data for linreg
-       y_data = selValDf['variable'].values.reshape(selValDf.shape[0],1)
-
-       reg = linear_model.LinearRegression().fit(x_data, y_data)
-       coef = reg.coef_ * listLen  # define linreg trend as coef to be plot and saved in iterator
-                                   # multiply coef by listLen variable for variables w/ < 40 yrs of data
-
-# %%
-# Automate the iterator to run through all station/variable/month MCA distributions
-# get start datetime
-startTime = datetime.now()
-
-for key in keylist_mx:
-       
-       df = dictMonthly[key]       # Set object name for ease of reading
-       lrcSdList = []              # reset SD list for each key and append to dictCoef
-       lrcMeanList = []            # reset mean list for each key and append to dictCoef
-
-       for var in vars_mx:
-
-              for month in range(1,13):
-                     # Select data from observed record for the iterator
-                     dataset = df[df.index.month['month']==month]\
-                               [col].tail(40).values.tolist()
-
-                     # Select observed linreg coef to plot on MCA distribution
-                     obsCoef = dictCoef[key][(dictCoef[key]['variable']==col)\
-                               & (dictCoef[key]['month']==month)]['coef'].values[0]
-
-                     sampSize = 10        # number of iterations for MCA
-                     counter = 1          # counter to keep track of iterated distributions
-                     linRegCoef = []      # create list for storing generated linreg coefs
-
-                     # iterate Monte Carlo simulator code
-                     while counter <= sampSize:  # iterate to chosen sample size
-                            monteCarloGenerator(dataset)
-                            linRegCoef.append(coef[0,0])
-                    
-                            counter += 1
-
-                     # collect information about generated linreg statistics (SD and mean)
-                     coefSeries = pd.Series(linRegCoef)                      # linregCoef to Series
-                     lrcSD, lrcMean = coefSeries.std(), coefSeries.mean()    # define SD and mean
-
-                     lrcSdList.append(lrcSD)                                 # append SD to list
-                     lrcMeanList.append(lrcMean)                             # append mean to list
-
-                     '''
-                     # plot distribution of coefficients onto histogram
-                     
-                     ax = coefSeries.plot.hist(bins=50) # generate histogram of linregCoef
-                     ax.axvline(obsCoef, color='r')     # plots corresponding linregCoef
-                     ax.set_xlabel(col)
-                     ax.set_ylabel('Count')
-                     ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+col+\
-                                  '\nClimate Station '+str(key)+', n='+str(sampSize))
-                     plt.show()                         # plots each MCA distribution
-                     '''
-       # add SD and mean to dictCoef dataframes
-       dfStats = pd.DataFrame({'sd': lrcSdList, 'mean': lrcMeanList}) # convert sd/mean lists to df
-       dictCoef[key] = dictCoef[key].join(dfStats, how='left')        # join above df to dictCoef
-       dictCoef[key][['key', 'month']] = dictCoef[key][['key','month']].astype(int) # reset key/month to ints
-
-endTime = datetime.now()
-elapsedTime = endTime - startTime
-print('Execution time:', elapsedTime)
 
 # %%
 for key in keylist_mx:
@@ -460,57 +505,5 @@ for key in keylist_mx:
        dict_mm_mx[key]['year'] = dict_mm_mx[key].index.year
        dict_mm_mx[key]['month'] = dict_mm_mx[key].index.month
 
-# %%
-for key in keylist_mx:
-       
-       df = dictMonthly[key]       # Set object name for ease of reading
-       lrcSdList = []              # reset SD list for each key and append to dictCoef
-       lrcMeanList = []            # reset mean list for each key and append to dictCoef
 
-       for var in vars_mx:
-
-              for month in range(1,13):
-                     # Select data from observed record for the iterator
-                     #dataset = dict_mm_mx[key][dict_mm_mx[key]['month']==month]\
-                               #[col].tail(40).values.tolist()
-                     dataset = df[(df.index.month==month) &\
-                                  (df.variable==var)].measurement.tail(40).values.tolist()
-
-                     # Select observed linreg coef to plot on MCA distribution
-                     obsCoef = dictCoef[key][(dictCoef[key].variable==var) &\
-                                             (dictCoef[key]['month']==month)]['coef'].values[0]
-
-                     sampSize = 10        # number of iterations for MCA
-                     counter = 1          # counter to keep track of iterated distributions
-                     linRegCoef = []      # create list for storing generated linreg coefs
-
-                     # iterate Monte Carlo simulator code
-                     while counter <= sampSize:  # iterate to chosen sample size
-                            monteCarloGenerator(dataset)
-                            linRegCoef.append(coef[0,0])
-                    
-                            counter += 1
-
-                     # collect information about generated linreg statistics (SD and mean)
-                     coefSeries = pd.Series(linRegCoef)                      # linregCoef to Series
-                     lrcSD, lrcMean = coefSeries.std(), coefSeries.mean()    # define SD and mean
-
-                     lrcSdList.append(lrcSD)                                 # append SD to list
-                     lrcMeanList.append(lrcMean)                             # append mean to list
-
-                     
-                     # plot distribution of coefficients onto histogram
-                     
-                     ax = coefSeries.plot.hist(bins=50) # generate histogram of linregCoef
-                     ax.axvline(obsCoef, color='r')     # plots corresponding linregCoef
-                     ax.set_xlabel(var)
-                     ax.set_ylabel('Count')
-                     ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+var+\
-                                  '\nClimate Station '+str(key)+', n='+str(sampSize))
-                     plt.show()                         # plots each MCA distribution
-                     
-       # add SD and mean to dictCoef dataframes
-       dfStats = pd.DataFrame({'sd': lrcSdList, 'mean': lrcMeanList}) # convert sd/mean lists to df
-       dictCoef[key] = dictCoef[key].join(dfStats, how='left')        # join above df to dictCoef
-       dictCoef[key][['key', 'month']] = dictCoef[key][['key','month']].astype(int) # reset key/month to ints
 # %%
