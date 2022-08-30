@@ -333,12 +333,12 @@ for key in keylist_mx:
                                    r'$\sigma=%.2f$' % (lrcSD, )))
                      elif var == vars_mx[1]:
                             textstr = '\n'.join((
-                                   r'historical trend = %.2f' % (obsCoef, 'mm/40yr'),
+                                   r'historical trend = %.2f%s' % (obsCoef, 'mm/40yr'),
                                    r'MC-generation chance = %.2f%s' % (percentChance, '%'),
                                    r'$\sigma=%.2f$' % (lrcSD, )))
                      else:
                             textstr = '\n'.join((
-                                   r'historical trend = %.2f' % (obsCoef, degree_sign+'C/40yr'),
+                                   r'historical trend = %.2f%s' % (obsCoef, degree_sign+'C/40yr'),
                                    r'MC-generation chance = %.2f%s' % (percentChance, '%'),
                                    r'$\sigma=%.2f$' % (lrcSD, )))
 
@@ -358,8 +358,8 @@ for key in keylist_mx:
                      ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+var+\
                                   '\nClimate Station '+str(key)+', n='+str(sampSize), fontsize=12)
                      plt.legend(loc='upper right')
-                     plt.show()                         # plots each MCA distribution
                      plt.savefig('mcaPlots/'+str(key)+'-'+var+'-'+month_str[month-1]+'_mca')
+                     plt.show()
                      
        # add SD and mean to dictCoef dataframes
        dfStats = pd.DataFrame({'sd': lrcSdList, 'mean': lrcMeanList}) # convert sd/mean lists to df
