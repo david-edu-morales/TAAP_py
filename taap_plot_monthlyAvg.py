@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import pandas as pd
 from sklearn import linear_model
+import csv
 import seaborn as sns
 sns.set(rc={'figure.figsize':(11, 4)})
 
@@ -10,7 +11,7 @@ sns.set(rc={'figure.figsize':(11, 4)})
 # Set up variables
 keylist_mx = [26013, 26057, 26164]                      # create list of climate station keys
 varsAvg_mx = ['evap', 'tmax', 'tmin']                   # specifiy variables to be resampled
-csvFile = 'climateStationTrends_taap.csv'               # csv filename to collect linRegCoefs
+csvFile = 'climateStationTrends_monthlyAvg.csv'         # csv filename to collect linRegCoefs
 headerList = ['key', 'variable', 'month', 'coef']       # header names for csv of linRegCoefs
 month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun',\
              'Jul','Aug','Sep','Oct','Nov','Dec']       # setup month names for graph
@@ -50,12 +51,12 @@ for key in keylist_mx:
 
 # %%
 # Re-create the 12-month plots for each station/variable using the quality-controlled data
-'''
+
 with open(csvFile, 'w') as file:       # set mode to write w/ truncation
        dw = csv.DictWriter(file, delimiter=',',
                            fieldnames=headerList)
        dw.writeheader()
-'''
+
 # Set up data & variables
 start, end = 1976, 2016 # set time frame to last forty years
 
@@ -96,15 +97,14 @@ for key in keylist_mx:
                      y_estimate = coef*x_data+inter # y=mx+b, possible option to upgrade
 
                      ax.plot(x_data,y_estimate) # this plots the linear regression
-                     '''
+                     
                      # Save the observed trends to a csv to be plotted on monte carlo distribution
                      saveLine = '\n'+str(key)+','+str(var)+','+str(month)+','+str(40*coef[0,0])
 
                      saveFile = open(csvFile, 'a')   # reopen csv file
                      saveFile.write(saveLine)        # append the saved row
                      saveFile.close()
-                     '''
-
+                     
                      # Set number of x-axis tick marks to max (5) and only as integers
                      ax.xaxis.set_major_locator(MaxNLocator(5, integer=True))
 
@@ -123,6 +123,7 @@ for key in keylist_mx:
                                    transform=ax.transAxes,
                                    fontsize=24,
                                    color='red')
-                     '''
-                     plt.savefig(str(key)+'_'+col+'_'+month_str[month-1]+'-mm')
-                     '''
+                     
+              plt.savefig('graphs/avgPlots/'+str(key)+'_'+var+'-avg')
+
+# %%
