@@ -99,6 +99,10 @@ for key in keylist_mx:
 dictSeasonPrecip = {key: pd.concat([dictWinPrecip[key],dictSummPrecip[key]], sort=True) for key in keylist_mx}
 
 # %%
+# Create precipSum csv files for MCA
+for key in keylist_mx:
+       dictSeasonPrecip[key].to_csv(str(key)+'_seasonalSum.csv')
+# %%
 # Re-create the 12-month plots for each station/variable using the quality-controlled data
 
 with open(csvFile, 'w') as file:       # set mode to write w/ truncation

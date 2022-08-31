@@ -50,7 +50,7 @@ for key in keylist_mx:
     dictMonthlyAvg.update(data)                                     # append element to dictionary
 
 # %%
-# Create cleaned-data csv files
+# Create monthlyAvg csv files for MCA
 for key in keylist_mx:
        dictMonthlyAvg[key].to_csv(str(key)+'_monthlyAvg.csv')
 
