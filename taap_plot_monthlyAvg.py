@@ -50,6 +50,11 @@ for key in keylist_mx:
     dictMonthlyAvg.update(data)                                     # append element to dictionary
 
 # %%
+# Create cleaned-data csv files
+for key in keylist_mx:
+       dictMonthlyAvg[key].to_csv(str(key)+'_monthlyAvg.csv')
+
+# %%
 # Re-create the 12-month plots for each station/variable using the quality-controlled data
 
 with open(csvFile, 'w') as file:       # set mode to write w/ truncation
