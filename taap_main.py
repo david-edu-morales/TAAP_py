@@ -1,7 +1,6 @@
 # %%
-from ast import Dict
 import datetime as dt
-from dfmgmt import *
+from mca import *
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -10,9 +9,6 @@ from random import randint
 from sklearn import linear_model
 import seaborn as sns
 sns.set(rc={'figure.figsize':(11, 4)})
-from tkinter import N
-
-import os
 
 # %%
 # Set up variables
@@ -234,37 +230,6 @@ dictCoef = {key: dfCoef[dfCoef['key'] == key] for key in keylist_mx}
 for key in keylist_mx:
        dictCoef[key].reset_index(drop=True, inplace=True)
 
-# %%
-# Monte Carlo function to generate randomized sample of observed values for given timeframe.
-def monteCarloGenerator(obsValueList):
-       global coef   # linear regression variable will be added to list in iterator
-
-       tX = [] # list to collect count of years for x-axis
-       vY = [] # list to collect randomized observed values for y-axis
-
-       currentYear = 1                    # counter to keep track of years
-       listLen = len(obsValueList)        # create limit of rolls and range of position values
-                                          # not all station/variable/month datasets are same size
-       while currentYear <= listLen:
-              roll = randint(0,(listLen-1))             # generate random index place value
-              selectedValue = obsValueList[roll]       # select corresponding precip value from list
-              tX.append(currentYear)                    # add year value to list
-              vY.append(selectedValue)                 # add precip value to list
-
-              currentYear += 1
-              
-       # Calculate the linear regression
-       # merge selectedValue and counter lists into dict
-       selValDf = pd.DataFrame({'year':tX,'variable':vY})       # convert dictionary into dataframe
-       selValDf = selValDf.dropna()              # drop NaN-bearing rows from dataframe
-
-       x_data = selValDf['year'].values.reshape(selValDf.shape[0],1)   # prep data for linreg
-       y_data = selValDf['variable'].values.reshape(selValDf.shape[0],1)
-
-       reg = linear_model.LinearRegression().fit(x_data, y_data)
-       coef = reg.coef_ * listLen  # define linreg trend as coef to be plot and saved in iterator
-                                   # multiply coef by listLen variable for variables w/ < 40 yrs of data
-
 # # %%
 # # Automate the iterator to run through all station/variable/month MCA distributions
 # # get start datetime
@@ -483,13 +448,13 @@ data_us['month'] = data_us. index.month
 
 # %%
 # Create a dictionary of dfs utilizing a for loop and the split_key_df function
-dfs_us = {key: split_key_df(data_us, key) for key in key_list_us}
+# dfs_us = {key: split_key_df(data_us, key) for key in key_list_us}
 
 # Create a function to generate separate dfs based on freq using a provided list of column names
 cols_us = ['precip', 'tmax', 'tmin']
 
 # Create a dictionary of dfs utilizing a for loop and the resample_mean
-dfs_mm_us = {key: resample_mean(dfs_us[key], cols_us, 'M') for key in key_list_us} # mm = monthly mean
+# dfs_mm_us = {key: resample_mean(dfs_us[key], cols_us, 'M') for key in key_list_us} # mm = monthly mean
 
 # Add month and year to each df in dict
 for key in key_list_us:
