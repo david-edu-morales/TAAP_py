@@ -371,25 +371,6 @@ def monteCarloGenerator(obsValueList):
 # print('Execution time:', elapsedTime)
 
 # %%
-# Organize precip data into wet/dry seasons
-# Select precip data and organize into a new dictionary
-#dictPrecip = {key: dictMonthly[key][dictMonthly[key].variable == 'precip'] for key in keylist_mx}
-
-# Create function to assign seasonality of the measurement based on the month
-season = lambda row: 'smr' if 6 <= row['month'] <= 9 else\
-                    ('wtr' if row['month'] <= 3 else\
-                    ('wtr' if row['month'] >= 11 else np.nan))
-
-# Create dictionary to receive updated dataframes
-dictPrecip = {}
-
-for key in keylist_mx:
-       df = dictMonthly[key][dictMonthly[key].variable == 'precip'].copy()   # .copy() prevents settingwithcopy warning
-       df['season'] = df.apply(season, axis=1)                               # create col to receive season
-       data = {key: df}                                                      # dict object to be updated
-       dictPrecip.update(data)                                               # update created dict
-
-# %%
 # Calculate rainfall for seasonal storm seasons for all stations
 # Select precip data from QC'd database
 dictPrecip = {key: dictMelt[key][dictMelt[key].variable == 'precip'] for key in keylist_mx}
