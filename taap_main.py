@@ -20,7 +20,6 @@ month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun',\
              'Jul','Aug','Sep','Oct','Nov','Dec']       # setup month names for graph
 degree_sign = u'\N{DEGREE SIGN}'                        # degree sign code
 
-
 # %%
 # *** MEXICAN CLIMATE STATIONS ***
 # US data is analyzed @ line 140
@@ -79,6 +78,7 @@ for key in keylist_mx:
        df = dictMelt[key]                 # Temporary rename of iterated df
        df['month'] = df.index.month       # Add month column
        df['year'] = df.index.year         # Add year column
+       df['key'] = key                    # Add key column
        # Count the total number of null values by month/year/variable (for <= 10 values rule)
        df['null_count'] = df.measurement.isnull().groupby([df['variable'],
                                                            df['month'],
@@ -110,8 +110,12 @@ dictMelt = {key: dictMelt[key][dictMelt[key].days_of_record + dictMelt[key].null
 dictMelt = {key: dictMelt[key][dictMelt[key].cons_null_max <= 5] for key in keylist_mx}
 
 # Remove unneeded columns
-dictMelt = {key: dictMelt[key][['variable','measurement','month','year']] for key in keylist_mx}
+dictMelt = {key: dictMelt[key][['variable','measurement','month','year','key']] for key in keylist_mx}
 
+# %%
+# Create cleaned-data csv files
+for key in keylist_mx:
+       dictMelt[key].to_csv(str(key)+'_clean-data.csv')
 # %%
 # Determine the monthly averages (Tn, Tx, and ET) and sums (precip) from the climatological data
 dictMonthly = {}     # create dictionary to receive for loop outputs
@@ -323,7 +327,7 @@ for key in keylist_mx:
 #                      ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+var+\
 #                                   '\nClimate Station '+str(key)+', n='+str(sampSize), fontsize=12)
 #                      plt.legend(loc='upper right')
-#                      plt.savefig('mcaPlots/'+str(key)+'-'+var+'-'+month_str[month-1]+'_mca')
+#                      plt.savefig('graphs/mcaPlots/'+str(key)+'-'+var+'-'+month_str[month-1]+'_mca')
 #                      plt.show()
                      
 #        # add SD and mean to dictCoef dataframes
