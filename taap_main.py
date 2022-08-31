@@ -390,27 +390,6 @@ for key in keylist_mx:
        dictPrecip.update(data)                                               # update created dict
 
 # %%
-# Calculate rainfall for winter frontal storm seasons for all stations
-# Select precip data from QC'd database
-dictPrecip = {key: dictMelt[key][dictMelt[key].variable == 'precip'] for key in keylist_mx}
-
-# Set up master dictionary to receive year & precipSum entries for all stations
-dictWinterRain = {}
-
-for key in keylist_mx:
-       df = dictPrecip[key]                             # simplify database for reference
-       yearList = df.index.year.unique().tolist()       # generate list of available years
-       stationData = {}                                 # create dict to hold precipSums for single station
-
-       for year in yearList:
-              # Create mask of desired dates for Winter rain-season
-              mask = (df.index >= dt.datetime(year,11,1)) & (df.index <= dt.datetime(year+1,3,31))
-              rainfall = df.loc[mask,['measurement']].sum()    # sum precip measurements from each day
-              winterPrecip = {year:rainfall[0]}                # generate year/precipSum entry
-              stationData.update(winterPrecip)                 # update station data with winter sum
-       dictStation = {key:stationData}           # generate station key/data entry
-       dictWinterRain.update(dictStation)        # update dict with data for entire station
-# %%
 # Calculate rainfall for seasonal storm seasons for all stations
 # Select precip data from QC'd database
 dictPrecip = {key: dictMelt[key][dictMelt[key].variable == 'precip'] for key in keylist_mx}
@@ -442,6 +421,7 @@ dictWinPrecip = {key: pd.DataFrame.from_dict(dictWinPrecip[key]) for key in keyl
 
 for key in keylist_mx:
        dictWinPrecip[key]['season'] = 'winter'
+       dictWinPrecip[key]['year'] = pd.to_datetime(dictWinPrecip[key]['year'], format='%Y')
        dictWinPrecip[key] = dictWinPrecip[key].set_index('year')
 
 # SUMMER SEASON // SUMMER SEASON // SUMMER SEASON // SUMMER SEASON
@@ -471,7 +451,11 @@ dictSummPrecip = {key: pd.DataFrame.from_dict(dictSummPrecip[key]) for key in ke
 
 for key in keylist_mx:
        dictSummPrecip[key]['season'] = 'summer'
+       dictSummPrecip[key]['year'] = pd.to_datetime(dictSummPrecip[key]['year'], format='%Y')
        dictSummPrecip[key] = dictSummPrecip[key].set_index('year')
+
+# Combine seasonal dataframes
+dictSeasonPrecip = {key: pd.concat([dictWinPrecip[key],dictSummPrecip[key]], sort=True) for key in keylist_mx}
 
 # %%
 # *** US CLIMATE STATIONS ***
