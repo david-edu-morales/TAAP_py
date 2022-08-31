@@ -534,14 +534,3 @@ for key in keylist_mx:
               index += 1
 
 # %%
-# proving grounds for MCA code
-# Resample data to a monthly mean
-dict_mm_mx = {key: dict_mx[key][vars_mx].resample('M').mean() for key in keylist_mx}
-
-# Add year and month columns for each monthly mean to make graphing simpler
-for key in keylist_mx:
-       dict_mm_mx[key]['year'] = dict_mm_mx[key].index.year
-       dict_mm_mx[key]['month'] = dict_mm_mx[key].index.month
-
-
-# %%
