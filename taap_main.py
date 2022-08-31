@@ -1,6 +1,5 @@
 # %%
 import datetime as dt
-from mca import *
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -115,7 +114,7 @@ dictMelt = {key: dictMelt[key][['variable','measurement','month','year','key']] 
 # %%
 # Create cleaned-data csv files
 for key in keylist_mx:
-       dictMelt[key].to_csv(str(key)+'_clean-data.csv')
+       dictMelt[key].to_csv('data/'+str(key)+'_clean-data.csv')
 # %%
 # Determine the monthly averages (Tn, Tx, and ET) and sums (precip) from the climatological data
 dictMonthly = {}     # create dictionary to receive for loop outputs
