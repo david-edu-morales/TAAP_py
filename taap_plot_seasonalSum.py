@@ -13,7 +13,7 @@ sns.set(rc={'figure.figsize':(11, 4)})
 keylist_mx = [26013, 26057, 26164]                      # create list of climate station keys
 varsSum_mx = ['precip']                                 # specify variables to be resampled
 seasons = ['summer', 'winter']                          # specify seasons to be graphed
-csvFile = 'data/climateStationTrends_precipSum.csv'     # csv filename to collect linRegCoefs
+csvFile = 'data/historicalTrends_precipSum.csv'     # csv filename to collect linRegCoefs
 headerList = ['key', 'season', 'coef']       # header names for csv of linRegCoefs
 
 # %%

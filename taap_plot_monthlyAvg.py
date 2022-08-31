@@ -11,7 +11,7 @@ sns.set(rc={'figure.figsize':(11, 4)})
 # Set up variables
 keylist_mx = [26013, 26057, 26164]                      # create list of climate station keys
 varsAvg_mx = ['evap', 'tmax', 'tmin']                   # specifiy variables to be resampled
-csvFile = 'data/climateStationTrends_monthlyAvg.csv'    # csv filename to collect linRegCoefs
+csvFile = 'data/historicalTrends_monthlyAvg.csv'    # csv filename to collect linRegCoefs
 headerList = ['key', 'variable', 'month', 'coef']       # header names for csv of linRegCoefs
 month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun',\
              'Jul','Aug','Sep','Oct','Nov','Dec']       # setup month names for graph
