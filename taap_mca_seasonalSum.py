@@ -24,7 +24,7 @@ filenameDict = {keylist_mx[key]: 'data/'+str(keylist_mx[key])+'_seasonalSum.csv'
 
 # Create a dictionary of keys and corresponding dataframes
 dictSeasonPrecip = {key: pd.read_csv(filename,
-                                     index_col = 'date',
+                                     index_col = 'year',
                                      parse_dates=True)
                         for (key, filename) in filenameDict.items()}
 
@@ -73,27 +73,24 @@ for key in keylist_mx:
 # get start datetime
 startTime = dt.datetime.now()
 
-keylist_mx = [26164]      # test values to play with plot output
-varsAvg_mx = ['tmin']
-
 for key in keylist_mx:
        
-        df = dictSeasonPrecip[key]       # Set object name for ease of reading
+        df = dictSeasonPrecip[key]  # Set object name for ease of reading
         lrcSdList = []              # reset SD list for each key and append to dictCoef
         lrcMeanList = []            # reset mean list for each key and append to dictCoef
         chanceList = []
 
         for var in varsSum_mx:
 
-            for i in range(len(seasons)):
+            for s in range(len(seasons)):
                 
                 # Select data from observed record for the iterator
-                dataset = df[df.season == seasons[i]].precipSum.tail(40).values.tolist()
+                dataset = df[df.season == seasons[s]].precipSum.tail(40).values.tolist()
 
                 # Select observed linreg coef to plot on MCA distribution
-                obsCoef = dictCoef[key][dictCoef[key].season==seasons[i]]['coef'].values[0]
+                obsCoef = dictCoef[key][dictCoef[key].season==seasons[s]]['coef'].values[0]
 
-                sampSize = 10     # number of iterations for MCA
+                sampSize = 100000    # number of iterations for MCA
                 counter = 1          # counter to keep track of iterated distributions
                 linRegCoef = []      # create list for storing generated linreg coefs
 
@@ -142,19 +139,19 @@ for key in keylist_mx:
 
                 ax.set_xlabel(var)
                 ax.set_ylabel('Count')
-                ax.set_title('Monte Carlo Analysis of '+seasons[i].capitalize()+' '+var.capitalize()+\
+                ax.set_title('Monte Carlo Analysis of '+seasons[s].capitalize()+' '+var.capitalize()+\
                         '\nClimate Station '+str(key)+', n='+str(sampSize), fontsize=12)
                 plt.legend(loc='upper right')
-                plt.savefig('graphs/mcaPlots/'+str(key)+'-'+var+'-'+seasons[i]+'_mca')
+                plt.savefig('graphs/mcaPlots/'+str(key)+'-'+var+'-'+seasons[s]+'_mca')
                 plt.show()
                 
-                print(str(key)+'/'+var+'/'+seasons[i]+': stats completed')
+                print(str(key)+'/'+var+'/'+seasons[s]+': stats completed')
         print('_________________________')
 
         # add SD and mean to dictCoef dataframes
         dfStats = pd.DataFrame({'sd': lrcSdList, 'mean': lrcMeanList, 'chance': chanceList}) # convert sd/mean lists to df
         dictCoef[key] = dictCoef[key].join(dfStats, how='left')        # join above df to dictCoef
-        dictCoef[key][['key', 'month']] = dictCoef[key][['key','month']].astype(int) # reset key/month to ints
+        #dictCoef[key][['key', 'month']] = dictCoef[key][['key','month']].astype(int) # reset key/month to ints
 
 endTime = dt.datetime.now()
 elapsedTime = endTime - startTime
