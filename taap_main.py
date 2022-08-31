@@ -411,10 +411,11 @@ for key in keylist_mx:
        dictStation = {key:stationData}           # generate station key/data entry
        dictWinterRain.update(dictStation)        # update dict with data for entire station
 # %%
-# Calculate rainfall for winter frontal storm seasons for all stations
+# Calculate rainfall for seasonal storm seasons for all stations
 # Select precip data from QC'd database
 dictPrecip = {key: dictMelt[key][dictMelt[key].variable == 'precip'] for key in keylist_mx}
 
+# WINTER SEASON // WINTER SEASON // WINTER SEASON // WINTER SEASON
 # Set up master dictionary to receive year & precipSum entries for all stations
 dictWinPrecip = {}
 
@@ -438,6 +439,40 @@ for key in keylist_mx:
        dictWinPrecip.update(dictStation)         # add stationData entry to winPrecip dict
 
 dictWinPrecip = {key: pd.DataFrame.from_dict(dictWinPrecip[key]) for key in keylist_mx}
+
+for key in keylist_mx:
+       dictWinPrecip[key]['season'] = 'winter'
+       dictWinPrecip[key] = dictWinPrecip[key].set_index('year')
+
+# SUMMER SEASON // SUMMER SEASON // SUMMER SEASON // SUMMER SEASON
+# Set up master dictionary to receive year & precipSum entries for all stations
+dictSummPrecip = {}
+
+for key in keylist_mx:
+       df = dictPrecip[key]                             # simplify dataframe for reference
+       stationData = {}                                 # dict to hold precipSum/yearList for single station
+       yearList = df.index.year.unique().tolist()       # list to hold all available years
+       precipSums = []                                  # list to hold precipSums for each year
+
+       for year in yearList:
+              # Create mask of desired dates for Summer rain-season
+              mask = (df.index >= dt.datetime(year,6,1)) & (df.index <= dt.datetime(year,9,30))
+              rainfall = df.loc[mask,['measurement']].sum()    # sum precip measurements from each day
+              precipSums.append(rainfall[0])                   # add precipSum to list
+
+       yearEntry = {'year' : yearList}           # create entry for list of years
+       rainEntry = {'precipSum' : precipSums}    # create entry for list of precipSums
+       stationData.update(yearEntry)             # add year entry to stationData dict
+       stationData.update(rainEntry)             # add sums entry to stationData dict
+       dictStation = {key:stationData}           # create entry of station key/data
+       dictSummPrecip.update(dictStation)        # add stationData entry to summPrecip dict
+
+dictSummPrecip = {key: pd.DataFrame.from_dict(dictSummPrecip[key]) for key in keylist_mx}
+
+for key in keylist_mx:
+       dictSummPrecip[key]['season'] = 'summer'
+       dictSummPrecip[key] = dictSummPrecip[key].set_index('year')
+
 # %%
 # *** US CLIMATE STATIONS ***
 
