@@ -13,14 +13,14 @@ sns.set(rc={'figure.figsize':(11, 4)})
 keylist_mx = [26013, 26057, 26164]                      # create list of climate station keys
 varsSum_mx = ['precip']                                 # specify variables to be resampled
 seasons = ['summer', 'winter']                          # specify seasons to be graphed
-csvFile = 'climateStationTrends_precipSum.csv'                # csv filename to collect linRegCoefs
+csvFile = 'data/climateStationTrends_precipSum.csv'     # csv filename to collect linRegCoefs
 headerList = ['key', 'season', 'coef']       # header names for csv of linRegCoefs
 
 # %%
 # *** MEXICAN CLIMATE STATIONS ***
 # Read the files into a df
 # Create a dictionary of keys and filenames to call dataframes into another dictionary
-filenameDict = {keylist_mx[key]: str(keylist_mx[key])+'_clean-data.csv' for key in range(len(keylist_mx))}
+filenameDict = {keylist_mx[key]: 'data/'+str(keylist_mx[key])+'_clean-data.csv' for key in range(len(keylist_mx))}
 
 # Create a dictionary of keys and corresponding dataframes
 dictCleanData = {key: pd.read_csv(filename,
@@ -101,7 +101,7 @@ dictSeasonPrecip = {key: pd.concat([dictWinPrecip[key],dictSummPrecip[key]], sor
 # %%
 # Create precipSum csv files for MCA
 for key in keylist_mx:
-       dictSeasonPrecip[key].to_csv(str(key)+'_seasonalSum.csv')
+       dictSeasonPrecip[key].to_csv('data/'+str(key)+'_seasonalSum.csv')
 # %%
 # Re-create the 12-month plots for each station/variable using the quality-controlled data
 

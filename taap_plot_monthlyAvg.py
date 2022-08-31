@@ -11,7 +11,7 @@ sns.set(rc={'figure.figsize':(11, 4)})
 # Set up variables
 keylist_mx = [26013, 26057, 26164]                      # create list of climate station keys
 varsAvg_mx = ['evap', 'tmax', 'tmin']                   # specifiy variables to be resampled
-csvFile = 'climateStationTrends_monthlyAvg.csv'         # csv filename to collect linRegCoefs
+csvFile = 'data/climateStationTrends_monthlyAvg.csv'    # csv filename to collect linRegCoefs
 headerList = ['key', 'variable', 'month', 'coef']       # header names for csv of linRegCoefs
 month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun',\
              'Jul','Aug','Sep','Oct','Nov','Dec']       # setup month names for graph
@@ -21,7 +21,7 @@ degree_sign = u'\N{DEGREE SIGN}'                        # degree sign code
 # *** MEXICAN CLIMATE STATIONS ***
 # Read the files into a df
 # Create a dictionary of keys and filenames to call dataframes into another dictionary
-filenameDict = {keylist_mx[key]: str(keylist_mx[key])+'_clean-data.csv' for key in range(len(keylist_mx))}
+filenameDict = {keylist_mx[key]: 'data/'+str(keylist_mx[key])+'_clean-data.csv' for key in range(len(keylist_mx))}
 
 # Create a dictionary of keys and corresponding dataframes
 dictCleanData = {key: pd.read_csv(filename,
@@ -52,7 +52,7 @@ for key in keylist_mx:
 # %%
 # Create monthlyAvg csv files for MCA
 for key in keylist_mx:
-       dictMonthlyAvg[key].to_csv(str(key)+'_monthlyAvg.csv')
+       dictMonthlyAvg[key].to_csv('data/'+str(key)+'_monthlyAvg.csv')
 
 # %%
 # Re-create the 12-month plots for each station/variable using the quality-controlled data
