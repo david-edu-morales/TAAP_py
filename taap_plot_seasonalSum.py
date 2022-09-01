@@ -114,7 +114,7 @@ with open(csvFile, 'w') as file:       # set mode to write w/ truncation
 start, end = 1976, 2016 # set time frame to last forty years
 
 for key in keylist_mx:
-       df = dictSeasonPrecip[key]       # rename working database for ease of reading      
+       dfKey = dictSeasonPrecip[key]       # rename working database for ease of reading      
 
        for var in varsSum_mx:
 
@@ -128,8 +128,13 @@ for key in keylist_mx:
                      ax = fig.add_subplot(1,2, i+1)    # creates a 12-plot fig (3r x 4c)
 
                      # select data to plot
-                     x = df[df.season == seasons[i]].tail(40).index.year
-                     y = df[df.season == seasons[i]].precipSum.tail(40)
+                     df = dfKey[dfKey.season == seasons[i]]
+
+                     end = df.index.year[-1]
+                     start = end - 39
+
+                     x = df.loc[str(start):str(end)].index.year
+                     y = df.loc[str(start):str(end)].precipSum.tail(40)
 
                      ax.plot(x,y)  # this plots the col values
 
@@ -137,12 +142,13 @@ for key in keylist_mx:
                      ax.set_title(seasons[i], fontsize=24, fontweight='bold')
 
                      # Make the linear regression
-                     database = df[(df.season == seasons[i])][[]].tail(40)
+                     database = df.loc[str(start):str(end)][[]].tail(40)
                      database = database.dropna()
 
                      # Reshape data for use in LinReg builder
                      x_data = x.values.reshape(x.shape[0],1)
                      y_data = y.values.reshape(y.shape[0],1)
+                     timespan = x_data[-1,0] - x_data[0,0] + 1
 
                      reg = linear_model.LinearRegression().fit(x_data, y_data)
                      coef = reg.coef_
@@ -151,8 +157,8 @@ for key in keylist_mx:
 
                      ax.plot(x_data,y_estimate) # this plots the linear regression
                      
-                     # Save the observed trends to a csv to be plotted on monte carlo distribution
-                     saveLine = '\n'+str(key)+','+seasons[i]+','+str(40*coef[0,0])
+                     # # Save the observed trends to a csv to be plotted on monte carlo distribution
+                     saveLine = '\n'+str(key)+','+seasons[i]+','+str(timespan*coef[0,0])
 
                      saveFile = open(csvFile, 'a')   # reopen csv file
                      saveFile.write(saveLine)        # append the saved row
@@ -162,7 +168,7 @@ for key in keylist_mx:
                      ax.set_ylabel('mm', fontsize=18)
                      ax.tick_params(axis='both', which='major', labelsize=18)
                      ax.text(.1, .8,
-                            str(round((end-start)*coef[0,0],2))+'mm/40yr',
+                            str(round(timespan*coef[0,0],2))+'mm/'+str(timespan)+'yr',
                             transform=ax.transAxes,
                             fontsize=24,
                             color='red')
