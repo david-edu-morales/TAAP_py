@@ -10,7 +10,7 @@ sns.set(rc={'figure.figsize':(11, 4)})
 # %%
 # Set up variables
 keylist_mx = [26013, 26057, 26164]                      # create list of climate station keys
-varsAvg_mx = ['evap', 'tmax', 'tmin']                   # specifiy variables to be resampled
+varsAvg_mx = ['tmax', 'tmin','evap']                   # specifiy variables to be resampled
 csvFile = 'data/historicalTrends_monthlyAvg.csv'    # csv filename to collect linRegCoefs
 headerList = ['key', 'variable', 'month', 'coef']       # header names for csv of linRegCoefs
 month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun',\
@@ -120,7 +120,7 @@ for key in keylist_mx:
                      ax.xaxis.set_major_locator(MaxNLocator(5, integer=True))
 
                      # Var-dependent subplot formatting
-                     if var == varsAvg_mx[0]:
+                     if var == varsAvg_mx[-1]:
                             ax.set_ylabel('mm')
                             ax.text(.1, .8,
                                    str(round(timespan*coef[0,0],2))+'mm/'+str(timespan)+'yr',
