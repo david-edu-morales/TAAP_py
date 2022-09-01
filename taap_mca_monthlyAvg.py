@@ -75,9 +75,6 @@ for key in keylist_mx:
 # get start datetime
 startTime = dt.datetime.now()
 
-#varsAvg_mx = ['tmax', 'tmin', 'evap']
-#keylist_mx = [26057]
-
 for key in keylist_mx:
        
         dfKey = dictMonthlyAvg[key]       # Set object name for ease of reading
@@ -100,7 +97,8 @@ for key in keylist_mx:
                         # Select observed linreg coef to plot on MCA distribution
                         obsCoef = dictCoef[key][(dictCoef[key].variable==var) &\
                                                 (dictCoef[key]['month']==month)]['coef'].values[0]
-                        sampSize = 10     # number of iterations for MCA
+                                                
+                        sampSize = 10000     # number of iterations for MCA
                         counter = 1          # counter to keep track of iterated distributions
                         linRegCoef = []      # create list for storing generated linreg coefs
 
@@ -157,7 +155,7 @@ for key in keylist_mx:
                         ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+var+\
                                 '\nClimate Station '+str(key)+', n='+str(sampSize), fontsize=12)
                         plt.legend(loc='upper right')
-                        # plt.savefig('graphs/mcaPlots/'+str(key)+'-'+var+'-'+month_str[month-1]+'_mca')
+                        plt.savefig('graphs/mcaPlots/'+str(key)+'-'+var+'-'+month_str[month-1]+'_mca')
                         plt.show()
                         
                         print(str(key)+'/'+var+'/'+str(month)+': stats completed')
