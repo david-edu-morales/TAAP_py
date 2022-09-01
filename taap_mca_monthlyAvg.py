@@ -11,7 +11,7 @@ sns.set(rc={'figure.figsize':(11, 4)})
 # %%
 # Set up variables
 keylist_mx = [26013, 26057, 26164]                      # create list of climate station keys
-varsAvg_mx = ['evap', 'tmax', 'tmin']                   # specifiy variables to be resampled
+varsAvg_mx = ['tmax', 'tmin','evap']                   # specifiy variables to be resampled
 csvFile = 'data/historicalTrends_monthlyAvg.csv'    # csv filename to collect linRegCoefs
 headerList = ['key', 'variable', 'month', 'coef']       # header names for csv of linRegCoefs
 month_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun',\
@@ -75,9 +75,12 @@ for key in keylist_mx:
 # get start datetime
 startTime = dt.datetime.now()
 
+#varsAvg_mx = ['tmax', 'tmin', 'evap']
+#keylist_mx = [26057]
+
 for key in keylist_mx:
        
-        df = dictMonthlyAvg[key]       # Set object name for ease of reading
+        dfKey = dictMonthlyAvg[key]       # Set object name for ease of reading
         lrcSdList = []              # reset SD list for each key and append to dictCoef
         lrcMeanList = []            # reset mean list for each key and append to dictCoef
         chanceList = []
@@ -87,13 +90,17 @@ for key in keylist_mx:
                 for month in range(1,13):
                 #for month in range(1,2):
                         # Select data from observed record for the iterator
-                        dataset = df[(df.index.month==month) &\
-                                (df.variable==var)].measurement.tail(40).values.tolist()
+                        df = dfKey[(dfKey.index.month==month) & (dfKey.variable==var)]
+
+                        end = df.index.year[-1]
+                        start = end - 39
+
+                        dataset = df.loc[str(start):str(end)].measurement.values.tolist()
 
                         # Select observed linreg coef to plot on MCA distribution
                         obsCoef = dictCoef[key][(dictCoef[key].variable==var) &\
                                                 (dictCoef[key]['month']==month)]['coef'].values[0]
-                        sampSize = 10000     # number of iterations for MCA
+                        sampSize = 10     # number of iterations for MCA
                         counter = 1          # counter to keep track of iterated distributions
                         linRegCoef = []      # create list for storing generated linreg coefs
 
@@ -128,7 +135,7 @@ for key in keylist_mx:
                         # plot distribution of coefficients onto histogram
                         ax = coefSeries.plot.hist(bins=50, label='_nolegend_') # generate histogram of linregCoef
                         ax.axvline(obsCoef, color='r', label='historical trend')     # plots corresponding linregCoef
-                        if var == varsAvg_mx[0]:
+                        if var == varsAvg_mx[-1]:
                                 textstr = '\n'.join((
                                 r'historical trend = %.2f%s' % (obsCoef, 'mm/40yr'),
                                 r'MC-generation chance = %.2f%s' % (percentChance, '%'),
@@ -150,7 +157,7 @@ for key in keylist_mx:
                         ax.set_title('Monte Carlo Analysis of '+month_str[month-1]+' '+var+\
                                 '\nClimate Station '+str(key)+', n='+str(sampSize), fontsize=12)
                         plt.legend(loc='upper right')
-                        plt.savefig('graphs/mcaPlots/'+str(key)+'-'+var+'-'+month_str[month-1]+'_mca')
+                        # plt.savefig('graphs/mcaPlots/'+str(key)+'-'+var+'-'+month_str[month-1]+'_mca')
                         plt.show()
                         
                         print(str(key)+'/'+var+'/'+str(month)+': stats completed')
