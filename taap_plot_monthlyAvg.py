@@ -95,6 +95,7 @@ for key in keylist_mx:
                      # Reshape data for use in LinReg builder
                      x_data = database['year'].values.reshape(database.shape[0],1)
                      y_data = database['measurement'].values.reshape(database.shape[0],1)
+                     timespan = x_data[-1,0] - x_data[0,0] + 1
 
                      reg = linear_model.LinearRegression().fit(x_data, y_data)
                      coef = reg.coef_
@@ -104,7 +105,7 @@ for key in keylist_mx:
                      ax.plot(x_data,y_estimate) # this plots the linear regression
                      
                      # Save the observed trends to a csv to be plotted on monte carlo distribution
-                     saveLine = '\n'+str(key)+','+str(var)+','+str(month)+','+str(40*coef[0,0])
+                     saveLine = '\n'+str(key)+','+str(var)+','+str(month)+','+str(timespan*coef[0,0])
 
                      saveFile = open(csvFile, 'a')   # reopen csv file
                      saveFile.write(saveLine)        # append the saved row
@@ -117,14 +118,14 @@ for key in keylist_mx:
                      if var == varsAvg_mx[0]:
                             ax.set_ylabel('mm')
                             ax.text(.1, .8,
-                                   str(round((end-start)*coef[0,0],2))+'mm/40yr',
+                                   str(round(timespan*coef[0,0],2))+'mm/'+str(timespan)+'yr',
                                    transform=ax.transAxes,
                                    fontsize=24,
                                    color='red')
                      else:
                             ax.set_ylabel(degree_sign+'C')
                             ax.text(.1, .8,
-                                   str(round((end-start)*coef[0,0],2))+degree_sign+'C/40yr',
+                                   str(round(timespan*coef[0,0],2))+degree_sign+'C/'+str(timespan)+'yr',
                                    transform=ax.transAxes,
                                    fontsize=24,
                                    color='red')
