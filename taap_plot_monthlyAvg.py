@@ -66,7 +66,7 @@ with open(csvFile, 'w') as file:       # set mode to write w/ truncation
 start, end = 1976, 2016 # set time frame to last forty years
 
 for key in keylist_mx:
-       df = dictMonthlyAvg[key]       # rename working database for ease of reading      
+       dfKey = dictMonthlyAvg[key]       # rename working database for ease of reading      
 
        for var in varsAvg_mx:
 
@@ -80,8 +80,13 @@ for key in keylist_mx:
                      ax = fig.add_subplot(3,4,month)    # creates a 12-plot fig (3r x 4c)
 
                      # select data to plot
-                     x = df[(df.index.month == month) & (df.variable == var)].tail(40).index.year
-                     y = df[(df.index.month == month) & (df.variable == var)].measurement.tail(40)
+                     df = dfKey[(dfKey.index.month == month) & (dfKey.variable == var)]
+
+                     end = df.index.year[-1]
+                     start = end - 39
+
+                     x = df.loc[str(start):str(end)].index.year
+                     y = df.loc[str(start):str(end)].measurement
 
                      ax.plot(x,y)  # this plots the col values
 
@@ -89,7 +94,7 @@ for key in keylist_mx:
                      ax.set_title(month_str[month-1], fontsize=20, fontweight='bold')
 
                      # Make the linear regression
-                     database = df[(df.index.month==month) & (df.variable==var)][['measurement','year']].tail(40)
+                     database = df.loc[str(start):str(end)][['measurement','year']]
                      database = database.dropna()
 
                      # Reshape data for use in LinReg builder
