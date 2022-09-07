@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 from matplotlib.dates import MonthLocator, DateFormatter
 import datetime as dt
+import seaborn as sns
+
+sns.set(rc={'figure.figsize':(11, 4)})
 
 # %%
 # Set the station IDs
@@ -82,3 +85,5 @@ fig.legend(handles, labels, bbox_to_anchor=(.2625,.88))
 
 plt.savefig('graphs/prctChance-avg')
 plt.show()
+
+# %%
