@@ -75,7 +75,7 @@ startTime = dt.datetime.now()
 
 for key in keylist_mx:
        
-        df = dictSeasonPrecip[key]  # Set object name for ease of reading
+        dfKey = dictSeasonPrecip[key]  # Set object name for ease of reading
         lrcSdList = []              # reset SD list for each key and append to dictCoef
         lrcMeanList = []            # reset mean list for each key and append to dictCoef
         chanceList = []
@@ -83,9 +83,14 @@ for key in keylist_mx:
         for var in varsSum_mx:
 
             for s in range(len(seasons)):
-                
+                df = dfKey[dfKey.season == seasons[s]]
+
+                end = df.index.year[-1]
+                start = start = end - 39
+
+                dataset = df.loc[str(start):str(end)].precipSum.values.tolist()
                 # Select data from observed record for the iterator
-                dataset = df[df.season == seasons[s]].precipSum.tail(40).values.tolist()
+                #dataset = df[df.season == seasons[s]].precipSum.tail(40).values.tolist()
 
                 # Select observed linreg coef to plot on MCA distribution
                 obsCoef = dictCoef[key][dictCoef[key].season==seasons[s]]['coef'].values[0]
